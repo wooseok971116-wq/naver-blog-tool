@@ -18,12 +18,13 @@
   .brand .ic{width:30px;height:30px;border-radius:9px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:800}
   .brand span{font-size:13px;font-weight:600;color:var(--muted)}
   h1.title{font-family:'Noto Serif KR',serif;font-size:30px;line-height:1.3;margin:0 0 10px;font-weight:700}
-  .sub{font-size:15px;line-height:1.7;color:var(--muted);margin:0 0 28px;max-width:560px}
+  .sub{font-size:15px;line-height:1.7;color:var(--muted);margin:0 0 24px;max-width:560px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
   .label{font-size:12.5px;font-weight:700;margin:0 0 7px}
   .hint{font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.6}
   .field{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14.5px;color:var(--ink);background:#FCFDFC;font-family:inherit}
   .field:focus{outline:2px solid var(--primary);outline-offset:1px}
+  textarea.field{resize:vertical;line-height:1.6}
   .row{display:flex;gap:8px}
   .mt{margin-top:20px}
   .btn{border:none;border-radius:10px;cursor:pointer;font-weight:700;font-family:inherit}
@@ -48,26 +49,53 @@
   .post ul{margin:0 0 12px;padding-left:18px}
   .post li{font-size:15px;line-height:1.8;margin-bottom:4px}
   .disc{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
+  /* 센터 정보 */
+  .center{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:16px;overflow:hidden}
+  .center summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px}
+  .center summary::-webkit-details-marker{display:none}
+  .center summary .nm{color:var(--primary);font-weight:600;font-size:12.5px}
+  .center .body{padding:0 20px 20px}
+  .center label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px}
+  .center .saved{font-size:12px;color:var(--primary);margin-top:10px;display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="brand"><div class="ic">↗</div><span>방문재활 · 재활운동 블로그 생성기</span></div>
   <h1 class="title">실제 인기 검색어를 넣고,<br/>버튼 한 번이면 글이 됩니다.</h1>
-  <p class="sub">네이버에서 사람들이 실제로 많이 검색한 질문·문장형 검색어를 불러와, 그 궁금증에 답이 되는 블로그 초안을 바로 만들어 드려요.</p>
+  <p class="sub">네이버에서 사람들이 실제로 많이 검색한 질문·문장형 검색어를 불러와, 우리 센터를 자연스럽게 녹인 블로그 초안을 바로 만들어 드려요.</p>
+
+  <!-- 센터 정보 (한 번만 저장하면 모든 글에 자동 반영) -->
+  <details class="center" id="centerBox">
+    <summary>🏥 센터 정보 — 글에 자동으로 들어가요 <span class="nm" id="centerNm"></span></summary>
+    <div class="body">
+      <label>센터 이름</label>
+      <input id="cName" class="field" />
+      <label>지역 / 지점</label>
+      <textarea id="cArea" class="field" rows="2"></textarea>
+      <label>전화번호</label>
+      <input id="cPhone" class="field" />
+      <label>강점</label>
+      <textarea id="cStrength" class="field" rows="5"></textarea>
+      <label>한줄 소개 (철학)</label>
+      <input id="cSlogan" class="field" />
+      <button id="cSave" class="btn btn-primary" style="margin-top:14px;padding:10px 16px">저장</button>
+      <span class="saved" id="cSaved">저장됐어요 ✓ 이제 모든 글에 자동으로 들어갑니다.</span>
+    </div>
+  </details>
 
   <div class="card">
     <!-- 주제 -->
     <div class="label">주제 (네이버에서 불러올 씨앗 키워드)</div>
     <div class="row">
       <input id="topic" class="field" style="flex:1 1 auto" value="파킨슨" placeholder="예: 파킨슨, 방문재활" />
-      <button id="loadBtn" class="btn btn-primary" style="flex:0 0 auto">네이버 top50 불러오기</button>
+      <button id="loadBtn" class="btn btn-primary" style="flex:0 0 auto">네이버 인기검색어 불러오기</button>
     </div>
     <p class="hint" id="loadMsg" style="margin-top:8px"></p>
 
     <!-- 키워드 -->
-    <div class="label mt">실제 인기 검색어 <span id="kwCount">0</span>개</div>
-    <p class="hint">네이버에서 실제로 많이 검색된 질문·문장형 검색어예요. (예: "파킨슨 환자 운동법", "파킨슨 재활치료")</p>
+    <div class="label mt">인기순 검색어 <span id="kwCount">0</span>개</div>
+    <p class="hint">네이버에서 실제로 많이 검색되는 순서대로 가져온 질문·문장형 검색어예요. (정확한 검색 횟수가 아니라 인기순 정렬)</p>
     <div class="row">
       <input id="newKw" class="field" style="flex:1 1 auto" placeholder="검색어 직접 추가 (예: 파킨슨 환자 운동법)" />
       <button id="addKwBtn" class="btn btn-primary" style="flex:0 0 auto">추가</button>
@@ -102,9 +130,40 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
-let kws = [];      // {keyword}
+let kws = [];
 let lastPost = "";
 
+// ── 센터 정보 (브라우저에 저장, 한 번만 입력하면 계속 유지) ──
+const CENTER_DEFAULT = {
+  name: "한국방문재활운동센터",
+  area: "본사는 서울 개포동에 있으며, 역삼·잠실·수원동탄·방배·분당 등 여러 파트너 지점을 운영합니다.",
+  phone: "010-2606-1463",
+  strength: `1. 재활 경력 5년 이상의 전문 자격을 갖춘 물리치료사가 직접 댁으로 방문해, 환자분의 일상에 실질적인 변화를 만들어 드립니다. 첫 방문 평가와 상담은 무료이니, 너무 깊이 고민하지 마시고 편하게 한번 연락 주세요.
+2. 업계 최초로 물리치료학 이학박사인 김찬우 대표가 직접 운영하는 센터입니다. 단순히 더 많은 곳에 치료사를 보내 수익을 늘리려는 것이 아니라, 치료사들도 환자분의 변화를 함께 느끼고 배워 나가기를 바라는 대표님만의 따뜻한 철학이 담겨 있습니다.`,
+  slogan: "당신의 '뇌'를 이해하지 못하면, 당신의 '몸'도 변하지 않습니다.",
+};
+function loadCenter(){
+  try{ const s = localStorage.getItem("center"); return s ? JSON.parse(s) : CENTER_DEFAULT; }
+  catch{ return CENTER_DEFAULT; }
+}
+function getCenterFromFields(){
+  return { name:$("cName").value.trim(), area:$("cArea").value.trim(), phone:$("cPhone").value.trim(),
+    strength:$("cStrength").value.trim(), slogan:$("cSlogan").value.trim() };
+}
+function fillCenterFields(c){
+  $("cName").value=c.name||""; $("cArea").value=c.area||""; $("cPhone").value=c.phone||"";
+  $("cStrength").value=c.strength||""; $("cSlogan").value=c.slogan||"";
+  $("centerNm").textContent = c.name ? `(${c.name})` : "";
+}
+fillCenterFields(loadCenter());
+$("cSave").onclick = ()=>{
+  const c = getCenterFromFields();
+  try{ localStorage.setItem("center", JSON.stringify(c)); }catch{}
+  $("centerNm").textContent = c.name ? `(${c.name})` : "";
+  $("cSaved").style.display="block"; setTimeout(()=>{ $("cSaved").style.display="none"; }, 2500);
+};
+
+// ── 키워드 ──
 function renderChips(){
   $("kwCount").textContent = kws.length;
   const c = $("chips"); c.innerHTML = "";
@@ -118,8 +177,7 @@ function renderChips(){
 function addKw(){
   const k = $("newKw").value.trim(); if(!k) return;
   if(kws.some(x=>x.keyword===k)){ $("newKw").value=""; return; }
-  kws.push({keyword:k});
-  $("newKw").value=""; renderChips();
+  kws.push({keyword:k}); $("newKw").value=""; renderChips();
 }
 $("addKwBtn").onclick = addKw;
 $("newKw").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addKw();}});
@@ -133,7 +191,7 @@ async function loadFromNaver(){
     if(!r.ok) throw new Error(data.error||"불러오기 실패");
     kws = (data.keywords||[]).map(k=>({keyword:k.keyword}));
     renderChips();
-    $("loadMsg").textContent = `네이버에서 실제 인기 검색어 ${kws.length}개를 불러왔어요.`;
+    $("loadMsg").textContent = `네이버에서 인기순 검색어 ${kws.length}개를 불러왔어요.`;
   }catch(e){ $("loadMsg").textContent = "불러오기 실패: " + (e.message||e); }
   finally{ $("loadBtn").disabled = false; }
 }
@@ -141,11 +199,11 @@ $("loadBtn").onclick = loadFromNaver;
 
 async function generate(){
   $("err").style.display="none"; $("result").style.display="none";
-  if(kws.length===0){ showErr("검색어가 없어요. '네이버 top50 불러오기'를 누르거나 직접 추가해 주세요."); return; }
+  if(kws.length===0){ showErr("검색어가 없어요. '네이버 인기검색어 불러오기'를 누르거나 직접 추가해 주세요."); return; }
   $("genBtn").disabled = true; $("genBtn").textContent = "글을 쓰는 중…";
   try{
     const r = await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},
-      body: JSON.stringify({ topic:$("topic").value, keywords:kws, tone:$("tone").value, length:$("length").value })});
+      body: JSON.stringify({ topic:$("topic").value, keywords:kws, tone:$("tone").value, length:$("length").value, center:getCenterFromFields() })});
     const data = await r.json();
     if(!r.ok) throw new Error(data.detail || data.error || "생성 실패");
     lastPost = data.post;
@@ -160,7 +218,6 @@ $("copyBtn").onclick = ()=> navigator.clipboard.writeText(toNaverText(lastPost))
 
 function showErr(m){ $("err").textContent=m; $("err").style.display="block"; }
 
-// 네이버 블로그에 바로 붙여넣기 좋은 깔끔한 텍스트로 변환 (마크다운 기호 제거)
 function toNaverText(md){
   return md.split("\n").map((line)=> line
     .replace(/^#{1,6}\s+/,"")
@@ -169,7 +226,6 @@ function toNaverText(md){
   ).join("\n").replace(/\n{3,}/g,"\n\n").trim();
 }
 
-// ── 마크다운 → HTML (화면 표시용) ──
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function inlineMd(s){ return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
 function mdToHtml(md){
