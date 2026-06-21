@@ -31,6 +31,8 @@
   .btn-primary{background:var(--primary);color:#fff;padding:0 16px;font-size:14px;display:flex;align-items:center;gap:5px;white-space:nowrap}
   .btn-accent{width:100%;background:var(--accent);color:#fff;padding:15px 18px;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px}
   .btn-accent:disabled{background:var(--muted);cursor:default}
+  .btn-hero{width:100%;background:var(--accent);color:#fff;padding:20px;font-size:18px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:14px}
+  .btn-hero:disabled{background:var(--muted);cursor:default}
   .btn-ghost{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer}
   .chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px;max-height:220px;overflow-y:auto;padding:2px}
   .chip{display:inline-flex;align-items:center;gap:6px;background:var(--primarySoft);color:var(--primary);border-radius:999px;padding:6px 8px 6px 12px;font-size:13px;font-weight:600}
@@ -49,69 +51,81 @@
   .post ul{margin:0 0 12px;padding-left:18px}
   .post li{font-size:15px;line-height:1.8;margin-bottom:4px}
   .disc{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
-  /* 센터 정보 */
-  .center{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:16px;overflow:hidden}
-  .center summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px}
-  .center summary::-webkit-details-marker{display:none}
-  .center summary .nm{color:var(--primary);font-weight:600;font-size:12.5px}
-  .center .body{padding:0 20px 20px}
-  .center label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px}
-  .center .saved{font-size:12px;color:var(--primary);margin-top:10px;display:none}
+  details.box{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:16px;overflow:hidden}
+  details.box summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px}
+  details.box summary::-webkit-details-marker{display:none}
+  details.box summary .nm{color:var(--primary);font-weight:600;font-size:12.5px}
+  details.box .body{padding:0 20px 20px}
+  details.box label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px}
+  .saved{font-size:12px;color:var(--primary);margin-top:10px;display:none}
+  .todaypick{background:var(--primarySoft);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--ink);margin-bottom:4px}
+  .todaypick b{color:var(--primary)}
+  .todaymsg{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="brand"><div class="ic">↗</div><span>방문재활 · 재활운동 블로그 생성기</span></div>
-  <h1 class="title">실제 인기 검색어를 넣고,<br/>버튼 한 번이면 글이 됩니다.</h1>
-  <p class="sub">네이버에서 사람들이 실제로 많이 검색한 질문·문장형 검색어를 불러와, 우리 센터를 자연스럽게 녹인 블로그 초안을 바로 만들어 드려요.</p>
+  <h1 class="title">버튼 하나면,<br/>오늘의 블로그 글이 됩니다.</h1>
+  <p class="sub">날짜에 맞춰 오늘의 주제를 자동으로 골라, 네이버 인기 검색어와 최신 소식을 반영한 블로그 초안을 한 번에 만들어 드려요.</p>
 
-  <!-- 센터 정보 (한 번만 저장하면 모든 글에 자동 반영) -->
-  <details class="center" id="centerBox">
+  <!-- 센터 정보 -->
+  <details class="box" id="centerBox">
     <summary>🏥 센터 정보 — 글에 자동으로 들어가요 <span class="nm" id="centerNm"></span></summary>
     <div class="body">
-      <label>센터 이름</label>
-      <input id="cName" class="field" />
-      <label>지역 / 지점</label>
-      <textarea id="cArea" class="field" rows="2"></textarea>
-      <label>전화번호</label>
-      <input id="cPhone" class="field" />
-      <label>강점</label>
-      <textarea id="cStrength" class="field" rows="5"></textarea>
-      <label>한줄 소개 (철학)</label>
-      <input id="cSlogan" class="field" />
+      <label>센터 이름</label><input id="cName" class="field" />
+      <label>지역 / 지점</label><textarea id="cArea" class="field" rows="2"></textarea>
+      <label>전화번호</label><input id="cPhone" class="field" />
+      <label>강점</label><textarea id="cStrength" class="field" rows="5"></textarea>
+      <label>한줄 소개 (철학)</label><input id="cSlogan" class="field" />
       <button id="cSave" class="btn btn-primary" style="margin-top:14px;padding:10px 16px">저장</button>
       <span class="saved" id="cSaved">저장됐어요 ✓ 이제 모든 글에 자동으로 들어갑니다.</span>
     </div>
   </details>
 
+  <!-- 오늘의 주제 목록 -->
+  <details class="box" id="topicsBox">
+    <summary>📅 오늘의 주제 목록 — 날짜별 자동 선택 <span class="nm" id="topicTodayNm"></span></summary>
+    <div class="body">
+      <label>주제 키워드 (한 줄에 하나씩, 순서대로 1일·2일·3일…)</label>
+      <textarea id="topicsText" class="field" rows="12"></textarea>
+      <button id="tSave" class="btn btn-primary" style="margin-top:14px;padding:10px 16px">저장</button>
+      <span class="saved" id="tSaved">저장됐어요 ✓</span>
+    </div>
+  </details>
+
+  <!-- 오늘의 글 추천 (원버튼) -->
   <div class="card">
-    <!-- 주제 -->
-    <div class="label">주제 (네이버에서 불러올 씨앗 키워드)</div>
-    <div class="row">
-      <input id="topic" class="field" style="flex:1 1 auto" value="파킨슨" placeholder="예: 파킨슨, 방문재활" />
-      <button id="loadBtn" class="btn btn-primary" style="flex:0 0 auto">네이버 인기검색어 불러오기</button>
-    </div>
-    <p class="hint" id="loadMsg" style="margin-top:8px"></p>
-
-    <!-- 키워드 -->
-    <div class="label mt">인기순 검색어 <span id="kwCount">0</span>개</div>
-    <p class="hint">네이버에서 실제로 많이 검색되는 순서대로 가져온 질문·문장형 검색어예요. (정확한 검색 횟수가 아니라 인기순 정렬)</p>
-    <div class="row">
-      <input id="newKw" class="field" style="flex:1 1 auto" placeholder="검색어 직접 추가 (예: 파킨슨 환자 운동법)" />
-      <button id="addKwBtn" class="btn btn-primary" style="flex:0 0 auto">추가</button>
-    </div>
-    <div id="chips" class="chips"></div>
-
-    <!-- 옵션 -->
+    <div class="todaypick" id="todayPick"></div>
     <div class="opts">
       <div class="opt"><div class="label">말투</div>
         <select id="tone" class="field"><option>따뜻하고 친근하게</option><option>전문적이고 신뢰감 있게</option><option>간결하고 실용적으로</option></select></div>
       <div class="opt"><div class="label">분량</div>
         <select id="length" class="field"><option>짧게 (핵심만)</option><option selected>보통</option><option>길게 (자세히)</option></select></div>
     </div>
-
-    <button id="genBtn" class="btn btn-accent">✦ 블로그 글 생성</button>
+    <button id="todayBtn" class="btn btn-hero">✨ 오늘의 글 추천받기</button>
+    <p class="todaymsg" id="todayMsg"></p>
   </div>
+
+  <!-- 직접 주제 정하기 -->
+  <details class="box" style="margin-top:16px">
+    <summary>✏️ 또는 직접 주제 정하기</summary>
+    <div class="body">
+      <label>주제 (네이버에서 불러올 씨앗 키워드)</label>
+      <div class="row">
+        <input id="topic" class="field" style="flex:1 1 auto" value="파킨슨" placeholder="예: 파킨슨, 방문재활" />
+        <button id="loadBtn" class="btn btn-primary" style="flex:0 0 auto">검색어 불러오기</button>
+      </div>
+      <p class="hint" id="loadMsg" style="margin-top:8px"></p>
+      <label>인기순 검색어 <span id="kwCount">0</span>개</label>
+      <div class="row">
+        <input id="newKw" class="field" style="flex:1 1 auto" placeholder="검색어 직접 추가" />
+        <button id="addKwBtn" class="btn btn-primary" style="flex:0 0 auto">추가</button>
+      </div>
+      <div id="chips" class="chips"></div>
+      <button id="genBtn" class="btn btn-accent">✦ 이 검색어로 글 생성</button>
+    </div>
+  </details>
 
   <div id="err" class="err" style="display:none"></div>
 
@@ -119,7 +133,6 @@
     <div class="top">
       <span class="t">📄 생성된 초안</span>
       <div style="display:flex;gap:8px">
-        <button id="regenBtn" class="btn-ghost">↻ 다시 쓰기</button>
         <button id="copyBtn" class="btn-ghost">복사</button>
       </div>
     </div>
@@ -133,7 +146,7 @@ const $ = (id) => document.getElementById(id);
 let kws = [];
 let lastPost = "";
 
-// ── 센터 정보 (브라우저에 저장, 한 번만 입력하면 계속 유지) ──
+// ── 센터 정보 ──
 const CENTER_DEFAULT = {
   name: "한국방문재활운동센터",
   area: "본사는 서울 개포동에 있으며, 역삼·잠실·수원동탄·방배·분당 등 여러 파트너 지점을 운영합니다.",
@@ -142,92 +155,105 @@ const CENTER_DEFAULT = {
 2. 업계 최초로 물리치료학 이학박사인 김찬우 대표가 직접 운영하는 센터입니다. 단순히 더 많은 곳에 치료사를 보내 수익을 늘리려는 것이 아니라, 치료사들도 환자분의 변화를 함께 느끼고 배워 나가기를 바라는 대표님만의 따뜻한 철학이 담겨 있습니다.`,
   slogan: "당신의 '뇌'를 이해하지 못하면, 당신의 '몸'도 변하지 않습니다.",
 };
-function loadCenter(){
-  try{ const s = localStorage.getItem("center"); return s ? JSON.parse(s) : CENTER_DEFAULT; }
-  catch{ return CENTER_DEFAULT; }
+function loadCenter(){ try{ const s=localStorage.getItem("center"); return s?JSON.parse(s):CENTER_DEFAULT; }catch{ return CENTER_DEFAULT; } }
+function getCenter(){ return { name:$("cName").value.trim(), area:$("cArea").value.trim(), phone:$("cPhone").value.trim(), strength:$("cStrength").value.trim(), slogan:$("cSlogan").value.trim() }; }
+(function(){ const c=loadCenter(); $("cName").value=c.name||""; $("cArea").value=c.area||""; $("cPhone").value=c.phone||""; $("cStrength").value=c.strength||""; $("cSlogan").value=c.slogan||""; $("centerNm").textContent=c.name?`(${c.name})`:""; })();
+$("cSave").onclick=()=>{ const c=getCenter(); try{localStorage.setItem("center",JSON.stringify(c));}catch{} $("centerNm").textContent=c.name?`(${c.name})`:""; $("cSaved").style.display="block"; setTimeout(()=>$("cSaved").style.display="none",2500); };
+
+// ── 오늘의 주제 목록 ──
+const TOPICS_DEFAULT = ["뇌졸중","뇌경색","뇌출혈","편마비","파킨슨병","근감소증","근무력증","비사용증후군","퇴행성관절염","인공관절 수술 후 재활","고관절 골절","척수손상(SCI)","하반신마비","사지마비","다발성경화증(MS)","길랑바레증후군","치매","알츠하이머병","노인성 쇠약(Frailty)","낙상 후 보행장애","균형장애","보행장애","만성 요통","척추관협착증","허리디스크","경추디스크","척추압박골절","암 수술 후 재활","폐렴 후 체력저하","장기 입원 후 근력저하","중환자실 퇴원 후 기능저하(ICU-acquired weakness)"];
+function loadTopics(){ try{ const s=localStorage.getItem("topics"); if(s){ const a=JSON.parse(s); if(Array.isArray(a)&&a.length) return a; } }catch{} return TOPICS_DEFAULT; }
+function topicsToText(arr){ return arr.join("\n"); }
+function textToTopics(t){ return t.split("\n").map(s=>s.trim()).filter(Boolean); }
+function todayInfo(){
+  const list=loadTopics(); const now=new Date(); const day=now.getDate();
+  const idx=list.length?((day-1)%list.length):0;
+  return { list, day, idx, keyword:list[idx]||"", month:now.getMonth()+1, year:now.getFullYear() };
 }
-function getCenterFromFields(){
-  return { name:$("cName").value.trim(), area:$("cArea").value.trim(), phone:$("cPhone").value.trim(),
-    strength:$("cStrength").value.trim(), slogan:$("cSlogan").value.trim() };
+function refreshTodayUI(){
+  const t=todayInfo();
+  $("topicTodayNm").textContent = t.keyword?`(오늘 ${t.day}일 → ${t.keyword})`:"";
+  $("todayPick").innerHTML = t.keyword
+    ? `📅 오늘은 <b>${t.month}월 ${t.day}일</b> · 오늘의 주제: <b>${escapeHtml(t.keyword)}</b><br><span style="font-size:12px;color:var(--muted)">아래 버튼을 누르면 이 주제로 네이버 검색어와 최신 소식을 반영해 글을 만들어요.</span>`
+    : `주제 목록이 비어 있어요. 위 "오늘의 주제 목록"에서 추가해 주세요.`;
 }
-function fillCenterFields(c){
-  $("cName").value=c.name||""; $("cArea").value=c.area||""; $("cPhone").value=c.phone||"";
-  $("cStrength").value=c.strength||""; $("cSlogan").value=c.slogan||"";
-  $("centerNm").textContent = c.name ? `(${c.name})` : "";
+$("topicsText").value = topicsToText(loadTopics());
+refreshTodayUI();
+$("tSave").onclick=()=>{ const arr=textToTopics($("topicsText").value); try{localStorage.setItem("topics",JSON.stringify(arr));}catch{} refreshTodayUI(); $("tSaved").style.display="block"; setTimeout(()=>$("tSaved").style.display="none",2500); };
+
+// ── 키워드 칩 ──
+function renderChips(){
+  $("kwCount").textContent=kws.length; const c=$("chips"); c.innerHTML="";
+  kws.forEach((x)=>{ const el=document.createElement("span"); el.className="chip";
+    el.innerHTML=`${escapeHtml(x.keyword)}<button aria-label="삭제">✕</button>`;
+    el.querySelector("button").onclick=()=>{ kws=kws.filter(k=>k.keyword!==x.keyword); renderChips(); };
+    c.appendChild(el); });
 }
-fillCenterFields(loadCenter());
-$("cSave").onclick = ()=>{
-  const c = getCenterFromFields();
-  try{ localStorage.setItem("center", JSON.stringify(c)); }catch{}
-  $("centerNm").textContent = c.name ? `(${c.name})` : "";
-  $("cSaved").style.display="block"; setTimeout(()=>{ $("cSaved").style.display="none"; }, 2500);
+function addKw(){ const k=$("newKw").value.trim(); if(!k) return; if(kws.some(x=>x.keyword===k)){$("newKw").value="";return;} kws.push({keyword:k}); $("newKw").value=""; renderChips(); }
+$("addKwBtn").onclick=addKw;
+$("newKw").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();addKw();} });
+
+async function fetchKeywords(seed){
+  const r=await fetch(`/api/keywords?keyword=${encodeURIComponent(seed)}`);
+  const data=await r.json(); if(!r.ok) throw new Error(data.error||"불러오기 실패");
+  return (data.keywords||[]).map(k=>({keyword:k.keyword}));
+}
+$("loadBtn").onclick=async()=>{
+  const seed=$("topic").value.trim()||"방문재활";
+  $("loadMsg").textContent="네이버에서 불러오는 중…"; $("loadBtn").disabled=true;
+  try{ kws=await fetchKeywords(seed); renderChips(); $("loadMsg").textContent=`인기순 검색어 ${kws.length}개를 불러왔어요.`; }
+  catch(e){ $("loadMsg").textContent="불러오기 실패: "+(e.message||e); }
+  finally{ $("loadBtn").disabled=false; }
 };
 
-// ── 키워드 ──
-function renderChips(){
-  $("kwCount").textContent = kws.length;
-  const c = $("chips"); c.innerHTML = "";
-  kws.forEach((x) => {
-    const el = document.createElement("span"); el.className = "chip";
-    el.innerHTML = `${escapeHtml(x.keyword)}<button aria-label="삭제">✕</button>`;
-    el.querySelector("button").onclick = () => { kws = kws.filter(k=>k.keyword!==x.keyword); renderChips(); };
-    c.appendChild(el);
-  });
-}
-function addKw(){
-  const k = $("newKw").value.trim(); if(!k) return;
-  if(kws.some(x=>x.keyword===k)){ $("newKw").value=""; return; }
-  kws.push({keyword:k}); $("newKw").value=""; renderChips();
-}
-$("addKwBtn").onclick = addKw;
-$("newKw").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addKw();}});
-
-async function loadFromNaver(){
-  const topic = $("topic").value.trim() || "방문재활";
-  $("loadMsg").textContent = "네이버에서 실제 인기 검색어를 불러오는 중…"; $("loadBtn").disabled = true;
-  try{
-    const r = await fetch(`/api/keywords?keyword=${encodeURIComponent(topic)}`);
-    const data = await r.json();
-    if(!r.ok) throw new Error(data.error||"불러오기 실패");
-    kws = (data.keywords||[]).map(k=>({keyword:k.keyword}));
-    renderChips();
-    $("loadMsg").textContent = `네이버에서 인기순 검색어 ${kws.length}개를 불러왔어요.`;
-  }catch(e){ $("loadMsg").textContent = "불러오기 실패: " + (e.message||e); }
-  finally{ $("loadBtn").disabled = false; }
-}
-$("loadBtn").onclick = loadFromNaver;
-
-async function generate(){
+// ── 생성 공통 ──
+async function generate({topic, fresh, date}){
   $("err").style.display="none"; $("result").style.display="none";
-  if(kws.length===0){ showErr("검색어가 없어요. '네이버 인기검색어 불러오기'를 누르거나 직접 추가해 주세요."); return; }
-  $("genBtn").disabled = true; $("genBtn").textContent = "글을 쓰는 중…";
   try{
-    const r = await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},
-      body: JSON.stringify({ topic:$("topic").value, keywords:kws, tone:$("tone").value, length:$("length").value, center:getCenterFromFields() })});
-    const data = await r.json();
-    if(!r.ok) throw new Error(data.detail || data.error || "생성 실패");
-    lastPost = data.post;
-    $("post").innerHTML = mdToHtml(lastPost);
-    $("result").style.display="block";
-  }catch(e){ showErr("실패: " + (e.message||e)); }
-  finally{ $("genBtn").disabled=false; $("genBtn").textContent="✦ 블로그 글 생성"; }
+    const r=await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({ topic, keywords:kws, tone:$("tone").value, length:$("length").value, center:getCenter(), fresh:!!fresh, date:date||"" })});
+    const data=await r.json(); if(!r.ok) throw new Error(data.detail||data.error||"생성 실패");
+    lastPost=data.post; $("post").innerHTML=mdToHtml(lastPost); $("result").style.display="block";
+    $("result").scrollIntoView({behavior:"smooth", block:"start"});
+  }catch(e){ showErr("실패: "+(e.message||e)); }
 }
-$("genBtn").onclick = generate;
-$("regenBtn").onclick = generate;
-$("copyBtn").onclick = ()=> navigator.clipboard.writeText(toNaverText(lastPost)).then(()=>{ $("copyBtn").textContent="복사됨"; setTimeout(()=>$("copyBtn").textContent="복사",1600); });
+
+// ── 오늘의 글 추천 (원버튼) ──
+$("todayBtn").onclick=async()=>{
+  const t=todayInfo();
+  if(!t.keyword){ showErr("주제 목록이 비어 있어요. '오늘의 주제 목록'에서 추가해 주세요."); return; }
+  $("todayBtn").disabled=true; $("todayBtn").textContent="글을 만드는 중… (최신 소식 검색 포함, 20~40초)";
+  $("todayMsg").textContent=`오늘의 주제 "${t.keyword}"로 네이버 검색어를 불러오고 최신 소식을 반영하는 중이에요…`;
+  try{
+    try{ kws=await fetchKeywords(t.keyword); renderChips(); }catch{ kws=[{keyword:t.keyword}]; }
+    $("topic").value=t.keyword;
+    await generate({ topic:t.keyword, fresh:true, date:`${t.year}년 ${t.month}월 ${t.day}일` });
+    $("todayMsg").textContent="완성! 아래 글을 확인하고 복사해서 네이버 블로그에 붙여넣으세요.";
+  }finally{ $("todayBtn").disabled=false; $("todayBtn").textContent="✨ 오늘의 글 추천받기"; }
+};
+
+// ── 직접 생성 ──
+$("genBtn").onclick=async()=>{
+  if(kws.length===0){ showErr("검색어가 없어요. '검색어 불러오기'를 누르거나 직접 추가해 주세요."); return; }
+  $("genBtn").disabled=true; $("genBtn").textContent="글을 쓰는 중…";
+  try{ await generate({ topic:$("topic").value, fresh:false }); }
+  finally{ $("genBtn").disabled=false; $("genBtn").textContent="✦ 이 검색어로 글 생성"; }
+};
+
+$("copyBtn").onclick=()=> navigator.clipboard.writeText(toNaverText(lastPost)).then(()=>{ $("copyBtn").textContent="복사됨"; setTimeout(()=>$("copyBtn").textContent="복사",1600); });
 
 function showErr(m){ $("err").textContent=m; $("err").style.display="block"; }
 
 function toNaverText(md){
   return md.split("\n").map((line)=> line
     .replace(/^#{1,6}\s+/,"")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g,"$1")
     .replace(/\*\*(.+?)\*\*/g,"$1")
     .replace(/^\s*[-*]\s+/,"· ")
   ).join("\n").replace(/\n{3,}/g,"\n\n").trim();
 }
-
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function inlineMd(s){ return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
+function inlineMd(s){ return s.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
 function mdToHtml(md){
   const lines=md.split("\n"); let html="",inList=false;
   const closeList=()=>{ if(inList){html+="</ul>";inList=false;} };
@@ -241,7 +267,6 @@ function mdToHtml(md){
   }
   closeList(); return html;
 }
-
 renderChips();
 </script>
 </body>
