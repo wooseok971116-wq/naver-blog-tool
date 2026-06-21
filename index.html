@@ -40,10 +40,6 @@
   .thumb img{width:100%;height:100%;object-fit:cover;display:block}
   .thumb button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:999px;border:none;background:rgba(22,39,31,.66);color:#fff;cursor:pointer;font-size:12px;line-height:1;padding:0}
   .addphoto{width:76px;height:76px;border-radius:12px;border:1px dashed #BFD0C9;background:var(--bg);color:var(--primary);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600}
-  .toggle{display:flex;align-items:flex-start;gap:9px;margin-top:16px;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
-  .toggle.on{border-color:var(--primary);background:var(--primarySoft)}
-  .toggle b{font-size:13.5px}
-  .toggle small{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
   select.field{cursor:pointer}
   .opts{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
   .opt{flex:1 1 180px}
@@ -58,19 +54,16 @@
   .post ul{margin:0 0 12px;padding-left:18px}
   .post li{font-size:15px;line-height:1.8;margin-bottom:4px}
   .post figure{margin:18px 0}
-  .post figure img,.post figure svg{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--line)}
+  .post figure img{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--line)}
   .post figcaption{font-size:12.5px;color:var(--muted);text-align:center;margin-top:7px}
-  .imgph{width:100%;aspect-ratio:5/3;border-radius:12px;border:1px dashed #C2D2CB;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;background:var(--bg)}
   .disc{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
-  .spin{display:inline-block;animation:sp 1s linear infinite}
-  @keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="brand"><div class="ic">↗</div><span>방문재활 · 재활운동 블로그 생성기</span></div>
   <h1 class="title">키워드와 사진을 넣고,<br/>버튼 한 번이면 글이 됩니다.</h1>
-  <p class="sub">네이버에서 인기 키워드를 불러와, 사진까지 넣은 블로그 초안을 이 자리에서 바로 만들어 드려요.</p>
+  <p class="sub">네이버에서 인기 키워드를 불러와, 올린 사진을 알맞은 위치에 넣은 블로그 초안을 이 자리에서 바로 만들어 드려요.</p>
 
   <div class="card">
     <!-- 주제 -->
@@ -91,17 +84,10 @@
     <div id="chips" class="chips"></div>
 
     <!-- 사진 -->
-    <div class="label mt">사진 <span id="photoCount">0</span>/5 <span style="font-weight:500;color:var(--muted);font-size:11.5px">· 최소 2장 권장</span></div>
-    <p class="hint">핸드폰 사진첩이나 카메라에서 올리면, AI가 글에 맞는 위치에 2~5장 넣어줘요.</p>
+    <div class="label mt">사진 <span id="photoCount">0</span>/10 <span style="font-weight:500;color:var(--muted);font-size:11.5px">· 올린 사진을 AI가 글에 맞는 위치에 넣어줘요</span></div>
+    <p class="hint">핸드폰 사진첩이나 카메라에서 올리면, AI가 사진 내용을 보고 글 속 어울리는 자리에 배치해요. (사진을 안 올리면 글만 작성됩니다.)</p>
     <input id="fileInput" type="file" accept="image/*" multiple style="display:none" />
     <div id="photos" class="photos"></div>
-
-    <!-- AI 이미지 생성 -->
-    <label id="toggle" class="toggle">
-      <input id="genChk" type="checkbox" style="margin-top:2px;width:16px;height:16px;accent-color:var(--primary)" />
-      <span><b>AI가 블로그 상황에 맞게 이미지를 생성합니다</b>
-      <small id="genSub">체크하거나 올린 사진이 없으면, AI가 글에 어울리는 삽화를 그려 넣어요.</small></span>
-    </label>
 
     <!-- 옵션 -->
     <div class="opts">
@@ -134,9 +120,7 @@ const $ = (id) => document.getElementById(id);
 let kws = [];          // {keyword, total}
 let photos = [];       // {dataUrl, base64, mediaType}
 let lastPost = "";
-let mode = "uploaded";
 let usedPhotos = [];   // dataUrls in order
-let genSvgs = {};      // n -> svg
 
 // ── 키워드 ──
 function renderChips(){
@@ -176,10 +160,9 @@ async function loadFromNaver(){
 }
 $("loadBtn").onclick = loadFromNaver;
 
-// ── 사진 ──
+// ── 사진 (사용자 업로드 전용, 최대 10장) ──
 function renderPhotos(){
   $("photoCount").textContent = photos.length;
-  updateGenSub();
   const c = $("photos"); c.innerHTML = "";
   photos.forEach((p)=>{
     const d = document.createElement("div"); d.className="thumb";
@@ -187,14 +170,14 @@ function renderPhotos(){
     d.querySelector("button").onclick = ()=>{ photos = photos.filter(x=>x!==p); renderPhotos(); };
     c.appendChild(d);
   });
-  if(photos.length<5){
+  if(photos.length<10){
     const b = document.createElement("button"); b.className="addphoto"; b.innerHTML = "＋<br/>추가";
     b.onclick = ()=> $("fileInput").click();
     c.appendChild(b);
   }
 }
 $("fileInput").addEventListener("change",(e)=>{
-  const files = Array.from(e.target.files||[]); const room = 5 - photos.length;
+  const files = Array.from(e.target.files||[]); const room = 10 - photos.length;
   files.slice(0,Math.max(0,room)).forEach((file)=>{
     const reader = new FileReader();
     reader.onload = ()=>{ const dataUrl = reader.result;
@@ -204,40 +187,21 @@ $("fileInput").addEventListener("change",(e)=>{
   e.target.value = "";
 });
 
-// ── AI 이미지 토글 ──
-function updateGenSub(){
-  const on = $("genChk").checked || photos.length===0;
-  $("toggle").classList.toggle("on", on);
-  $("genSub").textContent = "체크하거나 올린 사진이 없으면, AI가 글에 어울리는 삽화를 그려 넣어요." + (photos.length===0?" (지금은 사진이 없어 자동 생성됩니다)":"");
-}
-$("genChk").addEventListener("change", updateGenSub);
-
 // ── 생성 ──
 async function generate(){
   $("err").style.display="none"; $("result").style.display="none";
   if(kws.length===0){ showErr("키워드가 없어요. '네이버 top50 불러오기'를 누르거나 직접 추가해 주세요."); return; }
   $("genBtn").disabled = true; $("genBtn").textContent = "글을 쓰는 중…";
-  genSvgs = {};
   try{
     const r = await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},
       body: JSON.stringify({ type:"post", topic:$("topic").value, keywords:kws, tone:$("tone").value, length:$("length").value,
-        photos: photos.map(p=>({base64:p.base64, mediaType:p.mediaType})), generateImages: $("genChk").checked })});
+        photos: photos.map(p=>({base64:p.base64, mediaType:p.mediaType})) })});
     const data = await r.json();
     if(!r.ok) throw new Error(data.detail || data.error || "생성 실패");
-    lastPost = data.post; mode = data.mode;
+    lastPost = data.post;
     usedPhotos = photos.map(p=>p.dataUrl);
     renderPost();
     $("result").style.display="block";
-    if(mode==="generated"){
-      const caps = parseCaptions(lastPost);
-      await Promise.all(Object.entries(caps).map(async([n,cap])=>{
-        try{
-          const ir = await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({type:"image",caption:cap})});
-          const id = await ir.json();
-          if(id.svg){ genSvgs[n]=id.svg; renderPost(); }
-        }catch(_){}
-      }));
-    }
   }catch(e){ showErr("실패: " + (e.message||e)); }
   finally{ $("genBtn").disabled=false; $("genBtn").textContent="✦ 블로그 글 생성"; }
 }
@@ -247,18 +211,10 @@ $("copyBtn").onclick = ()=> navigator.clipboard.writeText(lastPost).then(()=>{ $
 
 function showErr(m){ $("err").textContent=m; $("err").style.display="block"; }
 
-function parseCaptions(md){
-  const caps={}; const lines=md.split("\n");
-  for(let i=0;i<lines.length;i++){ const m=lines[i].trim().match(/^\[\[IMG:(\d+)\]\]$/);
-    if(m){ const nx=(lines[i+1]||"").trim(); caps[m[1]] = nx.startsWith(">")?nx.replace(/^>\s?/,""):"재활운동 삽화"; } }
-  return caps;
-}
 function renderImg(n,caption){
+  const src = usedPhotos[n-1]; if(!src) return "";
   const cap = caption?`<figcaption>${escapeHtml(caption)}</figcaption>`:"";
-  if(mode==="uploaded"){ const src=usedPhotos[n-1]; if(!src) return ""; return `<figure><img src="${src}" alt="${escapeHtml(caption)}"/>${cap}</figure>`; }
-  const svg=genSvgs[n];
-  if(svg) return `<figure>${svg}${cap}</figure>`;
-  return `<figure><div class="imgph"><span class="spin">◠</span>&nbsp;삽화 생성 중…</div>${cap}</figure>`;
+  return `<figure><img src="${src}" alt="${escapeHtml(caption)}"/>${cap}</figure>`;
 }
 function renderPost(){ $("post").innerHTML = mdToHtml(lastPost, renderImg); }
 
