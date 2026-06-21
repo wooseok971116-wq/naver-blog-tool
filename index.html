@@ -61,6 +61,16 @@
   .todaypick{background:var(--primarySoft);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--ink);margin-bottom:4px}
   .todaypick b{color:var(--primary)}
   .todaymsg{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6}
+  .post h3{font-family:'Noto Serif KR',serif;font-size:16px;margin:18px 0 6px;color:var(--primary)}
+  .post ol{margin:0 0 12px;padding-left:22px}
+  .post ol li{font-size:15px;line-height:1.8;margin-bottom:5px}
+  .post hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+  .post .telwrap{margin-top:20px;padding:18px;border:2px dashed var(--accent);border-radius:14px;text-align:center;background:#FFF6F2}
+  .post .telwrap .cap{font-size:13.5px;color:var(--muted);font-weight:700;margin-bottom:6px}
+  .post .telwrap .tel{display:inline-block;font-size:32px;font-weight:800;color:var(--accentDark);letter-spacing:.5px}
+  .titlehint{font-size:11.5px;color:var(--accentDark);font-weight:600;margin:-6px 0 14px}
+  .copynote{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.7;background:#F1F5F3;border-radius:10px;padding:11px 13px}
+  .copynote b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -137,7 +147,12 @@
       </div>
     </div>
     <div id="post" class="post"></div>
-    <p class="disc">초안이에요. 사실관계·표현은 한 번 검토한 뒤 올려주세요. 증상·치료 관련 내용은 전문가 확인을 권합니다. 복사하면 네이버에 붙여넣기 좋은 텍스트로 정리돼요.</p>
+    <div class="copynote">
+      <b>네이버에 올리는 법</b><br>
+      ① 위 <b>제목</b>은 네이버 글쓰기의 <b>제목칸</b>에 따로 넣기 &nbsp;② <b>복사</b> 버튼 → 본문칸에 <b>붙여넣기(Ctrl+V)</b><br>
+      ※ 이모지·기호·번호·구분선은 그대로 유지돼요. <b>글자 색·크기</b>는 네이버가 붙여넣기 때 지우니, 강조하고 싶은 줄만 네이버 도구로 한 번 더 색/크기 주면 끝!
+    </div>
+    <p class="disc">초안이에요. 사실관계·표현은 한 번 검토한 뒤 올려주세요. 증상·치료 관련 내용은 전문가 확인을 권합니다.</p>
   </div>
 </div>
 
@@ -240,32 +255,93 @@ $("genBtn").onclick=async()=>{
   finally{ $("genBtn").disabled=false; $("genBtn").textContent="✦ 이 검색어로 글 생성"; }
 };
 
-$("copyBtn").onclick=()=> navigator.clipboard.writeText(toNaverText(lastPost)).then(()=>{ $("copyBtn").textContent="복사됨"; setTimeout(()=>$("copyBtn").textContent="복사",1600); });
+$("copyBtn").onclick=async()=>{
+  if(!lastPost){ return; }
+  const html=buildClipboardHtml(lastPost); const text=toNaverText(lastPost);
+  const ok=()=>{ $("copyBtn").textContent="복사됨 ✓"; setTimeout(()=>$("copyBtn").textContent="복사",1600); };
+  try{
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([ new ClipboardItem({
+        "text/html": new Blob([html],{type:"text/html"}),
+        "text/plain": new Blob([text],{type:"text/plain"}),
+      })]);
+      ok();
+    } else { await navigator.clipboard.writeText(text); ok(); }
+  }catch(e){
+    try{ await navigator.clipboard.writeText(text); ok(); }
+    catch{ showErr("복사 실패: 브라우저 클립보드 권한을 확인해 주세요."); }
+  }
+};
 
 function showErr(m){ $("err").textContent=m; $("err").style.display="block"; }
 
-function toNaverText(md){
-  return md.split("\n").map((line)=> line
-    .replace(/^#{1,6}\s+/,"")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g,"$1")
-    .replace(/\*\*(.+?)\*\*/g,"$1")
-    .replace(/^\s*[-*]\s+/,"· ")
-  ).join("\n").replace(/\n{3,}/g,"\n\n").trim();
-}
+const TELRE=/\[\[TEL\]\]([^\[]+)\[\[\/TEL\]\]/;
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function inlineMd(s){ return s.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
-function mdToHtml(md){
-  const lines=md.split("\n"); let html="",inList=false;
-  const closeList=()=>{ if(inList){html+="</ul>";inList=false;} };
+function inlineMd(s){ return s.replace(/\[\[\/?TEL\]\]/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
+
+// 네이버 붙여넣기용 깔끔한 텍스트 (이모지·기호·번호는 그대로 살아남음)
+function toNaverText(md){
+  let s = md.replace(new RegExp(TELRE.source,"g"), (m,p)=>{
+    const bar="━".repeat(18);
+    return `${bar}\n📞 상담 문의 · 첫 방문 평가/상담 무료\n☎ ${p.trim()}\n${bar}`;
+  });
+  return s.split("\n").map((line)=>{
+    let l=line;
+    l=l.replace(/^#{1,6}\s+/,"");
+    l=l.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1");
+    l=l.replace(/\*\*(.+?)\*\*/g,"$1");
+    l=l.replace(/^([\-\*])\s+/,"• ");
+    return l;
+  }).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+}
+
+// 공통 라인 파서
+function eachBlock(md, on){
+  const lines=md.split("\n"); let listType=null;
+  const close=()=>{ if(listType){ on.closeList(listType); listType=null; } };
   for(const raw of lines){
     const line=raw.trim();
-    if(!line){ closeList(); continue; }
-    if(line.startsWith("## ")){ closeList(); html+=`<h2>${inlineMd(escapeHtml(line.slice(3)))}</h2>`; }
-    else if(line.startsWith("# ")){ closeList(); html+=`<h1>${inlineMd(escapeHtml(line.slice(2)))}</h1>`; }
-    else if(/^[-*]\s/.test(line)){ if(!inList){html+="<ul>";inList=true;} html+=`<li>${inlineMd(escapeHtml(line.replace(/^[-*]\s/,"")))}</li>`; }
-    else { closeList(); html+=`<p>${inlineMd(escapeHtml(line))}</p>`; }
+    if(!line){ close(); continue; }
+    const tel=line.match(TELRE); if(tel){ close(); on.tel(tel[1].trim()); continue; }
+    if(/^[-─—]{3,}$/.test(line)){ close(); on.hr(); continue; }
+    if(line.startsWith("### ")){ close(); on.h(3,line.slice(4)); continue; }
+    if(line.startsWith("## ")){ close(); on.h(2,line.slice(3)); continue; }
+    if(line.startsWith("# ")){ close(); on.h(1,line.slice(2)); continue; }
+    const om=line.match(/^\d+\.\s+(.*)$/); if(om){ if(listType!=="ol"){ close(); on.openList("ol"); listType="ol"; } on.li(om[1]); continue; }
+    const um=line.match(/^([•▸✓\-\*])\s+(.*)$/); if(um){ if(listType!=="ul"){ close(); on.openList("ul"); listType="ul"; } on.li(um[2]); continue; }
+    close(); on.p(line);
   }
-  closeList(); return html;
+  close();
+}
+
+// 화면 미리보기용 HTML (전화번호 크게 박스)
+function mdToHtml(md){
+  let html="";
+  eachBlock(md,{
+    openList:(t)=>html+=(t==="ol"?"<ol>":"<ul>"),
+    closeList:(t)=>html+=(t==="ol"?"</ol>":"</ul>"),
+    li:(t)=>html+=`<li>${inlineMd(escapeHtml(t))}</li>`,
+    h:(lv,t)=>{ if(lv===1) html+=`<h1>${inlineMd(escapeHtml(t))}</h1><div class="titlehint">↑ 이 제목을 네이버 글 '제목칸'에 넣으세요</div>`; else html+=`<h${lv}>${inlineMd(escapeHtml(t))}</h${lv}>`; },
+    hr:()=>html+="<hr>",
+    tel:(p)=>html+=`<div class="telwrap"><div class="cap">📞 상담 문의 · 첫 방문 평가/상담 무료</div><span class="tel">☎ ${escapeHtml(p)}</span></div>`,
+    p:(t)=>html+=`<p>${inlineMd(escapeHtml(t))}</p>`,
+  });
+  return html;
+}
+
+// 클립보드용 HTML (네이버가 살려주는 굵게·제목·목록 유지)
+function buildClipboardHtml(md){
+  let html="";
+  eachBlock(md,{
+    openList:(t)=>html+=(t==="ol"?"<ol>":"<ul>"),
+    closeList:(t)=>html+=(t==="ol"?"</ol>":"</ul>"),
+    li:(t)=>html+=`<li>${inlineMd(escapeHtml(t))}</li>`,
+    h:(lv,t)=>html+=`<h${lv===1?2:lv}>${inlineMd(escapeHtml(t))}</h${lv===1?2:lv}>`,
+    hr:()=>html+="<hr>",
+    tel:(p)=>html+=`<p><strong>📞 상담 문의 · 첫 방문 평가/상담 무료</strong></p><p><strong>☎ ${escapeHtml(p)}</strong></p>`,
+    p:(t)=>html+=`<p>${inlineMd(escapeHtml(t))}</p>`,
+  });
+  return `<div>${html}</div>`;
 }
 renderChips();
 </script>
