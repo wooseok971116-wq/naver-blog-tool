@@ -1,5 +1,5 @@
-// api/blog.js — 네이버 인기 검색어(질문/문장형 포함)를 바탕으로 블로그 글을 생성한다.
-// POST { topic, keywords, tone, length } -> { post }
+// api/blog.js — 인기 검색어 + 우리 센터 정보를 바탕으로 블로그 글을 생성한다.
+// POST { topic, keywords, tone, length, center } -> { post }
 
 const MODEL = "claude-sonnet-4-6";
 
@@ -34,7 +34,24 @@ module.exports = async function handler(req, res) {
     const keywords = Array.isArray(body.keywords) ? body.keywords : [];
     const tone = body.tone || "따뜻하고 친근하게";
     const length = (body.length || "보통").toString();
+    const c = body.center || {};
     const lenHint = length.includes("짧") ? "600~800자" : length.includes("길") ? "1300자 이상" : "900~1100자";
+
+    const centerBlock = (c.name && c.name.trim()) ? `
+[우리 센터 정보 — 글에 자연스럽게 녹일 것]
+- 센터명: ${c.name}
+- 지역/지점: ${c.area || ""}
+- 전화: ${c.phone || ""}
+- 강점: ${c.strength || ""}
+- 한줄 소개(철학): ${c.slogan || ""}
+
+[센터 반영 규칙]
+- 위 센터를 글 속에 자연스럽게 1~2회만 언급 (광고처럼 도배하지 말 것)
+- 글의 마지막 부분에서, 무료 첫 방문 평가·상담과 전화번호로 부드럽게 안내
+- 한줄 소개의 철학을 글의 톤에 은은하게 반영
+- 본문은 어디까지나 검색어 질문에 답이 되는 '정보 글'이 중심이고, 센터 홍보는 그 위에 자연스럽게 얹는 정도` : `
+[센터 정보 없음]
+- 특정 센터 홍보 없이 정보 글만 작성`;
 
     const promptText = `너는 방문재활·재활운동 분야의 전문 블로그 작가야.
 아래는 네이버에서 사람들이 실제로 많이 검색한 검색어(질문·문장형 포함)야. 이 검색어들이 다루는 궁금증이 글 속에서 자연스럽게 풀리도록, 네이버 블로그에 바로 올릴 한국어 글을 써줘.
@@ -44,6 +61,7 @@ ${topic}
 
 [실제 인기 검색어 (인기순)]
 ${keywords.map((k, i) => `${i + 1}. ${k.keyword || k}`).join("\n")}
+${centerBlock}
 
 [작성 규칙]
 - 말투: ${tone}
