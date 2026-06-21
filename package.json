@@ -1,0 +1,9 @@
+{
+  "name": "naver-blog-tool",
+  "version": "1.0.0",
+  "description": "네이버 키워드도구 월간 top50 → 블로그 글 생성 도구",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
