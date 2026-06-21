@@ -1,87 +1,67 @@
-// api/keywords.js
-// 네이버 검색광고 "키워드도구" API로 연관 키워드 + 월간 검색량을 가져와
-// 검색량 순으로 top50을 돌려주는 서버 함수 (Vercel / Netlify Functions 호환).
-//
-// 호출 예) GET /api/keywords?keyword=방문재활,재활운동
-// 응답 예) { seeds:[...], count: 50, keywords: [{ keyword, pc, mobile, total }, ...] }
+// api/keywords.js — 네이버 자동완성에서 "사람들이 실제로 많이 검색한 검색어/질문" top50을 가져온다.
+// 호출: GET /api/keywords?keyword=파킨슨
+// 자동완성은 인기순으로 정렬되어 나오며, 질문/문장형 장꼬리 검색어를 포함한다.
 
-const crypto = require("crypto");
-
-// 네이버 서명 만들기: HMAC-SHA256( "{timestamp}.{method}.{uri}" ) → base64
-function sign(timestamp, method, uri, secretKey) {
-  const message = `${timestamp}.${method}.${uri}`;
-  return crypto.createHmac("sha256", secretKey).update(message).digest("base64");
+function acUrl(q) {
+  const p = new URLSearchParams({
+    q, con: "1", frm: "nx", ans: "2", r_format: "json", r_enc: "UTF-8",
+    r_unicode: "0", t_koreng: "1", run: "2", rev: "4", q_enc: "UTF-8", st: "100",
+  });
+  return "https://ac.search.naver.com/nx/ac?" + p.toString();
 }
 
-// "< 10" 같은 문자열도 숫자로 정리
-function toNum(v) {
-  if (typeof v === "number") return v;
-  if (typeof v === "string") {
-    if (v.includes("<")) return 10; // "< 10" 은 10 미만 → 10으로 처리
-    const n = parseInt(v.replace(/[^0-9]/g, ""), 10);
-    return Number.isFinite(n) ? n : 0;
+async function fetchAc(q) {
+  try {
+    const r = await fetch(acUrl(q), {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://search.naver.com/",
+        "Accept": "application/json, text/javascript, */*",
+      },
+    });
+    if (!r.ok) return [];
+    const data = await r.json();
+    const groups = Array.isArray(data.items) ? data.items : [];
+    let flat = [];
+    for (const g of groups) if (Array.isArray(g)) flat = flat.concat(g);
+    return flat
+      .map((it) => (Array.isArray(it) ? it[0] : it))
+      .filter((s) => typeof s === "string" && s.trim());
+  } catch {
+    return [];
   }
-  return 0;
 }
 
 module.exports = async function handler(req, res) {
-  // 다른 도메인(프론트)에서 불러올 수 있게 허용
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const API_KEY = process.env.NAVER_API_KEY;        // 액세스 라이선스
-  const SECRET_KEY = process.env.NAVER_SECRET_KEY;  // 비밀키
-  const CUSTOMER_ID = process.env.NAVER_CUSTOMER_ID; // 고객 ID(숫자)
-
-  if (!API_KEY || !SECRET_KEY || !CUSTOMER_ID) {
-    return res.status(500).json({
-      error: "네이버 API 키가 설정되지 않았습니다. 환경변수 3개를 확인하세요.",
-    });
-  }
-
-  // 씨앗 키워드 (최대 5개, 공백 제거 권장)
-  const raw = (req.query.keyword || "방문재활,재활운동").toString();
-  const seeds = raw
-    .split(",")
-    .map((s) => s.trim().replace(/\s+/g, ""))
-    .filter(Boolean)
-    .slice(0, 5);
-  const hint = seeds.join(",");
-
-  const timestamp = Date.now().toString();
-  const uri = "/keywordstool";
-  const signature = sign(timestamp, "GET", uri, SECRET_KEY);
-  const url = `https://api.naver.com${uri}?hintKeywords=${encodeURIComponent(hint)}&showDetail=1`;
+  const seed = (req.query.keyword || "방문재활").toString().split(",")[0].trim();
+  if (!seed) return res.status(400).json({ error: "키워드를 입력하세요." });
 
   try {
-    const r = await fetch(url, {
-      method: "GET",
-      headers: {
-        "X-Timestamp": timestamp,
-        "X-API-KEY": API_KEY,
-        "X-Customer": String(CUSTOMER_ID),
-        "X-Signature": signature,
-      },
-    });
+    // 1차: 씨앗 키워드 자동완성 (가장 인기 있는 검색어)
+    const first = await fetchAc(seed);
+    // 2차: 상위 8개를 한 단계 더 펼쳐 질문·문장형 장꼬리 검색어 확보 (소규모만)
+    const children = await Promise.all(first.slice(0, 8).map((q) => fetchAc(q)));
 
-    if (!r.ok) {
-      const detail = await r.text();
-      return res.status(r.status).json({ error: "네이버 API 호출 실패", status: r.status, detail });
+    const seen = new Set();
+    const out = [];
+    for (const list of [first, ...children]) {
+      for (const phrase of list) {
+        const key = phrase.trim();
+        if (key && key !== seed && !seen.has(key)) {
+          seen.add(key);
+          out.push(key);
+        }
+        if (out.length >= 50) break;
+      }
+      if (out.length >= 50) break;
     }
 
-    const data = await r.json();
-    const keywords = (data.keywordList || [])
-      .map((k) => {
-        const pc = toNum(k.monthlyPcQcCnt);
-        const mobile = toNum(k.monthlyMobileQcCnt);
-        return { keyword: k.relKeyword, pc, mobile, total: pc + mobile };
-      })
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 50);
-
-    return res.status(200).json({ seeds, count: keywords.length, keywords });
+    return res.status(200).json({ seed, count: out.length, keywords: out.map((p) => ({ keyword: p })) });
   } catch (e) {
-    return res.status(500).json({ error: "요청 중 오류가 발생했습니다.", detail: String(e) });
+    return res.status(500).json({ error: "검색어를 불러오지 못했습니다.", detail: String(e) });
   }
 };
