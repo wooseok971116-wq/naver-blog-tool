@@ -69,6 +69,8 @@
   .post .telwrap .cap{font-size:13.5px;color:var(--muted);font-weight:700;margin-bottom:6px}
   .post .telwrap .tel{display:inline-block;font-size:32px;font-weight:800;color:var(--accentDark);letter-spacing:.5px}
   .titlehint{font-size:11.5px;color:var(--accentDark);font-weight:600;margin:-6px 0 14px}
+  .post .cta{margin-top:38px;text-align:center}
+  .post .cta .ctaline{font-family:'Noto Serif KR',serif;font-size:23px;font-weight:800;color:var(--primary);line-height:1.55}
   .copynote{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.7;background:#F1F5F3;border-radius:10px;padding:11px 13px}
   .copynote b{color:var(--ink)}
 </style>
@@ -275,24 +277,17 @@ $("copyBtn").onclick=async()=>{
 
 function showErr(m){ $("err").textContent=m; $("err").style.display="block"; }
 
-const TELRE=/\[\[TEL\]\]([^\[]+)\[\[\/TEL\]\]/;
+const CTARE=/\[\[CTA\]\]([\s\S]*?)\[\[\/CTA\]\]/;
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function inlineMd(s){ return s.replace(/\[\[\/?TEL\]\]/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
+function inlineMd(s){ return s.replace(/\[\[\/?CTA\]\]/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
 
-// 네이버 붙여넣기용 깔끔한 텍스트 (이모지·기호·번호는 그대로 살아남음)
-function toNaverText(md){
-  let s = md.replace(new RegExp(TELRE.source,"g"), (m,p)=>{
-    const bar="━".repeat(18);
-    return `${bar}\n📞 상담 문의 · 첫 방문 평가/상담 무료\n☎ ${p.trim()}\n${bar}`;
-  });
-  return s.split("\n").map((line)=>{
-    let l=line;
-    l=l.replace(/^#{1,6}\s+/,"");
-    l=l.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1");
-    l=l.replace(/\*\*(.+?)\*\*/g,"$1");
-    l=l.replace(/^([\-\*])\s+/,"• ");
-    return l;
-  }).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+// 맨 밑 연락처(CTA) 블록 분리
+function extractCTA(md){
+  const m=md.match(CTARE);
+  if(!m) return { body:md, cta:null };
+  const cta=m[1].split("\n").map(s=>s.trim()).filter(Boolean);
+  const body=md.replace(m[0],"").replace(/\n{3,}/g,"\n\n").trim();
+  return { body, cta };
 }
 
 // 공통 라인 파서
@@ -302,7 +297,6 @@ function eachBlock(md, on){
   for(const raw of lines){
     const line=raw.trim();
     if(!line){ close(); continue; }
-    const tel=line.match(TELRE); if(tel){ close(); on.tel(tel[1].trim()); continue; }
     if(/^[-─—]{3,}$/.test(line)){ close(); on.hr(); continue; }
     if(line.startsWith("### ")){ close(); on.h(3,line.slice(4)); continue; }
     if(line.startsWith("## ")){ close(); on.h(2,line.slice(3)); continue; }
@@ -314,34 +308,54 @@ function eachBlock(md, on){
   close();
 }
 
-// 화면 미리보기용 HTML (전화번호 크게 박스)
+// 화면 미리보기용 HTML
 function mdToHtml(md){
+  const {body,cta}=extractCTA(md);
   let html="";
-  eachBlock(md,{
+  eachBlock(body,{
     openList:(t)=>html+=(t==="ol"?"<ol>":"<ul>"),
     closeList:(t)=>html+=(t==="ol"?"</ol>":"</ul>"),
     li:(t)=>html+=`<li>${inlineMd(escapeHtml(t))}</li>`,
     h:(lv,t)=>{ if(lv===1) html+=`<h1>${inlineMd(escapeHtml(t))}</h1><div class="titlehint">↑ 이 제목을 네이버 글 '제목칸'에 넣으세요</div>`; else html+=`<h${lv}>${inlineMd(escapeHtml(t))}</h${lv}>`; },
     hr:()=>html+="<hr>",
-    tel:(p)=>html+=`<div class="telwrap"><div class="cap">📞 상담 문의 · 첫 방문 평가/상담 무료</div><span class="tel">☎ ${escapeHtml(p)}</span></div>`,
     p:(t)=>html+=`<p>${inlineMd(escapeHtml(t))}</p>`,
   });
+  if(cta&&cta.length){ html+=`<div class="cta">${cta.map(l=>`<div class="ctaline">${inlineMd(escapeHtml(l))}</div>`).join("")}</div>`; }
   return html;
 }
 
-// 클립보드용 HTML (네이버가 살려주는 굵게·제목·목록 유지)
+// 클립보드용 HTML (네이버가 살려주는 소제목 크기·굵게 유지 / 가운데 정렬 시도 / 위 간격)
 function buildClipboardHtml(md){
+  const {body,cta}=extractCTA(md);
   let html="";
-  eachBlock(md,{
+  eachBlock(body,{
     openList:(t)=>html+=(t==="ol"?"<ol>":"<ul>"),
     closeList:(t)=>html+=(t==="ol"?"</ol>":"</ul>"),
     li:(t)=>html+=`<li>${inlineMd(escapeHtml(t))}</li>`,
     h:(lv,t)=>html+=`<h${lv===1?2:lv}>${inlineMd(escapeHtml(t))}</h${lv===1?2:lv}>`,
     hr:()=>html+="<hr>",
-    tel:(p)=>html+=`<p><strong>📞 상담 문의 · 첫 방문 평가/상담 무료</strong></p><p><strong>☎ ${escapeHtml(p)}</strong></p>`,
     p:(t)=>html+=`<p>${inlineMd(escapeHtml(t))}</p>`,
   });
+  if(cta&&cta.length){
+    html+=`<p><br></p><p><br></p>`;
+    html+=cta.map(l=>`<h2 style="text-align:center">${inlineMd(escapeHtml(l))}</h2>`).join("");
+  }
   return `<div>${html}</div>`;
+}
+
+// 네이버 붙여넣기용 텍스트 (이모지·기호·번호 그대로 살아남음)
+function toNaverText(md){
+  const {body,cta}=extractCTA(md);
+  let s=body.split("\n").map((line)=>{
+    let l=line;
+    l=l.replace(/^#{1,6}\s+/,"");
+    l=l.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1");
+    l=l.replace(/\*\*(.+?)\*\*/g,"$1");
+    l=l.replace(/^([\-\*])\s+/,"• ");
+    return l;
+  }).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+  if(cta&&cta.length){ s += "\n\n\n" + cta.join("\n"); }
+  return s.replace(/^\n+|\n+$/g,"");
 }
 renderChips();
 </script>
