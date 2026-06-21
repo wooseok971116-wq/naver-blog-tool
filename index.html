@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>방문재활 · 재활운동 블로그 생성기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#F4F7F5; --surface:#fff; --ink:#16271F; --muted:#5C6E66; --line:#E2EAE5;
+    --primary:#2F6B5E; --primarySoft:#DCEAE4; --accent:#E07856; --accentDark:#C9603F;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard','Noto Sans KR',sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px 80px}
+  .brand{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .brand .ic{width:30px;height:30px;border-radius:9px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:800}
+  .brand span{font-size:13px;font-weight:600;color:var(--muted)}
+  h1.title{font-family:'Noto Serif KR',serif;font-size:30px;line-height:1.3;margin:0 0 10px;font-weight:700}
+  .sub{font-size:15px;line-height:1.7;color:var(--muted);margin:0 0 28px;max-width:560px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .label{font-size:12.5px;font-weight:700;margin:0 0 7px}
+  .hint{font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.6}
+  .field{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14.5px;color:var(--ink);background:#FCFDFC;font-family:inherit}
+  .field:focus{outline:2px solid var(--primary);outline-offset:1px}
+  .row{display:flex;gap:8px}
+  .mt{margin-top:20px}
+  .btn{border:none;border-radius:10px;cursor:pointer;font-weight:700;font-family:inherit}
+  .btn-primary{background:var(--primary);color:#fff;padding:0 16px;font-size:14px;display:flex;align-items:center;gap:5px}
+  .btn-accent{width:100%;background:var(--accent);color:#fff;padding:15px 18px;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px}
+  .btn-accent:disabled{background:var(--muted);cursor:default}
+  .btn-ghost{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px;max-height:170px;overflow-y:auto;padding:2px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--primarySoft);color:var(--primary);border-radius:999px;padding:6px 8px 6px 12px;font-size:13px;font-weight:600}
+  .chip small{font-size:11px;color:var(--muted);font-weight:500}
+  .chip button{border:none;background:transparent;color:var(--primary);cursor:pointer;opacity:.6;font-size:14px;line-height:1;padding:0}
+  .photos{display:flex;flex-wrap:wrap;gap:8px}
+  .thumb{position:relative;width:76px;height:76px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:999px;border:none;background:rgba(22,39,31,.66);color:#fff;cursor:pointer;font-size:12px;line-height:1;padding:0}
+  .addphoto{width:76px;height:76px;border-radius:12px;border:1px dashed #BFD0C9;background:var(--bg);color:var(--primary);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600}
+  .toggle{display:flex;align-items:flex-start;gap:9px;margin-top:16px;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+  .toggle.on{border-color:var(--primary);background:var(--primarySoft)}
+  .toggle b{font-size:13.5px}
+  .toggle small{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+  select.field{cursor:pointer}
+  .opts{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .opt{flex:1 1 180px}
+  .err{margin-top:16px;background:#FBEDE8;border:1px solid #F0C9BC;color:var(--accentDark);border-radius:12px;padding:12px 14px;font-size:13.5px;white-space:pre-wrap}
+  .result{margin-top:22px}
+  .result .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .result .top .t{font-size:13px;font-weight:600;color:var(--muted)}
+  .post{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px 24px}
+  .post h1{font-family:'Noto Serif KR',serif;font-size:24px;line-height:1.35;margin:0 0 14px}
+  .post h2{font-family:'Noto Serif KR',serif;font-size:18px;margin:24px 0 8px;color:var(--primary)}
+  .post p{font-size:15px;line-height:1.85;margin:0 0 12px;color:#27352F}
+  .post ul{margin:0 0 12px;padding-left:18px}
+  .post li{font-size:15px;line-height:1.8;margin-bottom:4px}
+  .post figure{margin:18px 0}
+  .post figure img,.post figure svg{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--line)}
+  .post figcaption{font-size:12.5px;color:var(--muted);text-align:center;margin-top:7px}
+  .imgph{width:100%;aspect-ratio:5/3;border-radius:12px;border:1px dashed #C2D2CB;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;background:var(--bg)}
+  .disc{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
+  .spin{display:inline-block;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="ic">↗</div><span>방문재활 · 재활운동 블로그 생성기</span></div>
+  <h1 class="title">키워드와 사진을 넣고,<br/>버튼 한 번이면 글이 됩니다.</h1>
+  <p class="sub">네이버에서 인기 키워드를 불러와, 사진까지 넣은 블로그 초안을 이 자리에서 바로 만들어 드려요.</p>
+
+  <div class="card">
+    <!-- 주제 -->
+    <div class="label">주제 (네이버에서 불러올 씨앗 키워드, 쉼표로 구분)</div>
+    <div class="row">
+      <input id="topic" class="field" style="flex:1 1 auto" value="방문재활, 재활운동" />
+      <button id="loadBtn" class="btn btn-primary" style="flex:0 0 auto">네이버 top50 불러오기</button>
+    </div>
+    <p class="hint" id="loadMsg" style="margin-top:8px"></p>
+
+    <!-- 키워드 -->
+    <div class="label mt">인기 검색 키워드 <span id="kwCount">0</span>개</div>
+    <div class="row">
+      <input id="newKw" class="field" style="flex:1 1 auto" placeholder="키워드 직접 추가 (예: 무릎통증운동)" />
+      <input id="newVol" class="field" style="width:96px;flex:0 0 auto" placeholder="월 검색수" inputmode="numeric" />
+      <button id="addKwBtn" class="btn btn-primary" style="flex:0 0 auto">추가</button>
+    </div>
+    <div id="chips" class="chips"></div>
+
+    <!-- 사진 -->
+    <div class="label mt">사진 <span id="photoCount">0</span>/5 <span style="font-weight:500;color:var(--muted);font-size:11.5px">· 최소 2장 권장</span></div>
+    <p class="hint">핸드폰 사진첩이나 카메라에서 올리면, AI가 글에 맞는 위치에 2~5장 넣어줘요.</p>
+    <input id="fileInput" type="file" accept="image/*" multiple style="display:none" />
+    <div id="photos" class="photos"></div>
+
+    <!-- AI 이미지 생성 -->
+    <label id="toggle" class="toggle">
+      <input id="genChk" type="checkbox" style="margin-top:2px;width:16px;height:16px;accent-color:var(--primary)" />
+      <span><b>AI가 블로그 상황에 맞게 이미지를 생성합니다</b>
+      <small id="genSub">체크하거나 올린 사진이 없으면, AI가 글에 어울리는 삽화를 그려 넣어요.</small></span>
+    </label>
+
+    <!-- 옵션 -->
+    <div class="opts">
+      <div class="opt"><div class="label">말투</div>
+        <select id="tone" class="field"><option>따뜻하고 친근하게</option><option>전문적이고 신뢰감 있게</option><option>간결하고 실용적으로</option></select></div>
+      <div class="opt"><div class="label">분량</div>
+        <select id="length" class="field"><option>짧게 (핵심만)</option><option selected>보통</option><option>길게 (자세히)</option></select></div>
+    </div>
+
+    <button id="genBtn" class="btn btn-accent">✦ 블로그 글 생성</button>
+  </div>
+
+  <div id="err" class="err" style="display:none"></div>
+
+  <div id="result" class="result" style="display:none">
+    <div class="top">
+      <span class="t">📄 생성된 초안</span>
+      <div style="display:flex;gap:8px">
+        <button id="regenBtn" class="btn-ghost">↻ 다시 쓰기</button>
+        <button id="copyBtn" class="btn-ghost">복사</button>
+      </div>
+    </div>
+    <div id="post" class="post"></div>
+    <p class="disc">초안이에요. 사실관계·표현은 한 번 검토한 뒤 올려주세요. 증상·치료 관련 내용은 전문가 확인을 권합니다.</p>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let kws = [];          // {keyword, total}
+let photos = [];       // {dataUrl, base64, mediaType}
+let lastPost = "";
+let mode = "uploaded";
+let usedPhotos = [];   // dataUrls in order
+let genSvgs = {};      // n -> svg
+
+// ── 키워드 ──
+function renderChips(){
+  $("kwCount").textContent = kws.length;
+  const c = $("chips"); c.innerHTML = "";
+  kws.forEach((x) => {
+    const el = document.createElement("span"); el.className = "chip";
+    el.innerHTML = `${escapeHtml(x.keyword)}${x.total?`<small>· ${Number(x.total).toLocaleString()}</small>`:""}<button aria-label="삭제">✕</button>`;
+    el.querySelector("button").onclick = () => { kws = kws.filter(k=>k.keyword!==x.keyword); renderChips(); };
+    c.appendChild(el);
+  });
+}
+function addKw(){
+  const k = $("newKw").value.trim(); if(!k) return;
+  if(kws.some(x=>x.keyword===k)){ $("newKw").value=""; $("newVol").value=""; return; }
+  const v = parseInt(($("newVol").value||"").replace(/[^0-9]/g,""),10);
+  kws.push({keyword:k, total:Number.isFinite(v)?v:null});
+  kws.sort((a,b)=>(b.total??-1)-(a.total??-1));
+  $("newKw").value=""; $("newVol").value=""; renderChips();
+}
+$("addKwBtn").onclick = addKw;
+$("newKw").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addKw();}});
+$("newVol").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addKw();}});
+
+async function loadFromNaver(){
+  const topic = $("topic").value.trim() || "방문재활,재활운동";
+  $("loadMsg").textContent = "네이버에서 불러오는 중…"; $("loadBtn").disabled = true;
+  try{
+    const r = await fetch(`/api/keywords?keyword=${encodeURIComponent(topic)}`);
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.error||"불러오기 실패");
+    kws = (data.keywords||[]).map(k=>({keyword:k.keyword, total:k.total}));
+    renderChips();
+    $("loadMsg").textContent = `네이버에서 ${kws.length}개 키워드를 불러왔어요.`;
+  }catch(e){ $("loadMsg").textContent = "불러오기 실패: " + (e.message||e); }
+  finally{ $("loadBtn").disabled = false; }
+}
+$("loadBtn").onclick = loadFromNaver;
+
+// ── 사진 ──
+function renderPhotos(){
+  $("photoCount").textContent = photos.length;
+  updateGenSub();
+  const c = $("photos"); c.innerHTML = "";
+  photos.forEach((p)=>{
+    const d = document.createElement("div"); d.className="thumb";
+    d.innerHTML = `<img src="${p.dataUrl}" alt=""/><button aria-label="삭제">✕</button>`;
+    d.querySelector("button").onclick = ()=>{ photos = photos.filter(x=>x!==p); renderPhotos(); };
+    c.appendChild(d);
+  });
+  if(photos.length<5){
+    const b = document.createElement("button"); b.className="addphoto"; b.innerHTML = "＋<br/>추가";
+    b.onclick = ()=> $("fileInput").click();
+    c.appendChild(b);
+  }
+}
+$("fileInput").addEventListener("change",(e)=>{
+  const files = Array.from(e.target.files||[]); const room = 5 - photos.length;
+  files.slice(0,Math.max(0,room)).forEach((file)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{ const dataUrl = reader.result;
+      photos.push({dataUrl, base64:String(dataUrl).split(",")[1], mediaType:file.type||"image/jpeg"}); renderPhotos(); };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = "";
+});
+
+// ── AI 이미지 토글 ──
+function updateGenSub(){
+  const on = $("genChk").checked || photos.length===0;
+  $("toggle").classList.toggle("on", on);
+  $("genSub").textContent = "체크하거나 올린 사진이 없으면, AI가 글에 어울리는 삽화를 그려 넣어요." + (photos.length===0?" (지금은 사진이 없어 자동 생성됩니다)":"");
+}
+$("genChk").addEventListener("change", updateGenSub);
+
+// ── 생성 ──
+async function generate(){
+  $("err").style.display="none"; $("result").style.display="none";
+  if(kws.length===0){ showErr("키워드가 없어요. '네이버 top50 불러오기'를 누르거나 직접 추가해 주세요."); return; }
+  $("genBtn").disabled = true; $("genBtn").textContent = "글을 쓰는 중…";
+  genSvgs = {};
+  try{
+    const r = await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},
+      body: JSON.stringify({ type:"post", topic:$("topic").value, keywords:kws, tone:$("tone").value, length:$("length").value,
+        photos: photos.map(p=>({base64:p.base64, mediaType:p.mediaType})), generateImages: $("genChk").checked })});
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.detail || data.error || "생성 실패");
+    lastPost = data.post; mode = data.mode;
+    usedPhotos = photos.map(p=>p.dataUrl);
+    renderPost();
+    $("result").style.display="block";
+    if(mode==="generated"){
+      const caps = parseCaptions(lastPost);
+      await Promise.all(Object.entries(caps).map(async([n,cap])=>{
+        try{
+          const ir = await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({type:"image",caption:cap})});
+          const id = await ir.json();
+          if(id.svg){ genSvgs[n]=id.svg; renderPost(); }
+        }catch(_){}
+      }));
+    }
+  }catch(e){ showErr("실패: " + (e.message||e)); }
+  finally{ $("genBtn").disabled=false; $("genBtn").textContent="✦ 블로그 글 생성"; }
+}
+$("genBtn").onclick = generate;
+$("regenBtn").onclick = generate;
+$("copyBtn").onclick = ()=> navigator.clipboard.writeText(lastPost).then(()=>{ $("copyBtn").textContent="복사됨"; setTimeout(()=>$("copyBtn").textContent="복사",1600); });
+
+function showErr(m){ $("err").textContent=m; $("err").style.display="block"; }
+
+function parseCaptions(md){
+  const caps={}; const lines=md.split("\n");
+  for(let i=0;i<lines.length;i++){ const m=lines[i].trim().match(/^\[\[IMG:(\d+)\]\]$/);
+    if(m){ const nx=(lines[i+1]||"").trim(); caps[m[1]] = nx.startsWith(">")?nx.replace(/^>\s?/,""):"재활운동 삽화"; } }
+  return caps;
+}
+function renderImg(n,caption){
+  const cap = caption?`<figcaption>${escapeHtml(caption)}</figcaption>`:"";
+  if(mode==="uploaded"){ const src=usedPhotos[n-1]; if(!src) return ""; return `<figure><img src="${src}" alt="${escapeHtml(caption)}"/>${cap}</figure>`; }
+  const svg=genSvgs[n];
+  if(svg) return `<figure>${svg}${cap}</figure>`;
+  return `<figure><div class="imgph"><span class="spin">◠</span>&nbsp;삽화 생성 중…</div>${cap}</figure>`;
+}
+function renderPost(){ $("post").innerHTML = mdToHtml(lastPost, renderImg); }
+
+// ── 마크다운 ──
+function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function inlineMd(s){ return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
+function mdToHtml(md, renderImg){
+  const lines=md.split("\n"); let html="",inList=false;
+  const closeList=()=>{ if(inList){html+="</ul>";inList=false;} };
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i].trim();
+    const img=line.match(/^\[\[IMG:(\d+)\]\]$/);
+    if(img){ closeList(); let caption=""; const nx=(lines[i+1]||"").trim();
+      if(nx.startsWith(">")){ caption=nx.replace(/^>\s?/,""); i++; }
+      html+=renderImg(parseInt(img[1],10), caption); continue; }
+    if(!line){ closeList(); continue; }
+    if(line.startsWith("## ")){ closeList(); html+=`<h2>${inlineMd(escapeHtml(line.slice(3)))}</h2>`; }
+    else if(line.startsWith("# ")){ closeList(); html+=`<h1>${inlineMd(escapeHtml(line.slice(2)))}</h1>`; }
+    else if(line.startsWith(">")){ closeList(); html+=`<p>${inlineMd(escapeHtml(line.replace(/^>\s?/,"")))}</p>`; }
+    else if(/^[-*]\s/.test(line)){ if(!inList){html+="<ul>";inList=true;} html+=`<li>${inlineMd(escapeHtml(line.replace(/^[-*]\s/,"")))}</li>`; }
+    else { closeList(); html+=`<p>${inlineMd(escapeHtml(line))}</p>`; }
+  }
+  closeList(); return html;
+}
+
+renderChips(); renderPhotos();
+</script>
+</body>
+</html>
