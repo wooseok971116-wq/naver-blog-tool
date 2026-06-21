@@ -46,8 +46,10 @@ module.exports = async function handler(req, res) {
 [센터 정보 없음 — 특정 센터 홍보 없이 정보 글만]`;
 
     const telLine = (c.phone && c.phone.trim())
-      ? `반드시 글의 맨 마지막 줄을, 토큰을 포함해 정확히 이 형식으로 끝낼 것: [[TEL]]${c.phone}[[/TEL]]`
-      : `전화번호가 없으므로 [[TEL]] 토큰은 쓰지 말 것.`;
+      ? `글의 맨 마지막을, 다른 머리말 없이 정확히 아래 두 줄로 끝낼 것 (소제목 ## 형식 그대로, 토큰·기호 추가 금지):
+## 첫 방문 평가 및 상담 무료
+## ☎ ${c.phone}`
+      : `전화번호가 없으므로 마지막 연락처 줄은 넣지 말 것.`;
 
     const freshBlock = fresh ? `
 [시의성 — 매달 갱신되는 글]
