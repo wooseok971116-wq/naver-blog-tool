@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>방문재활 · 재활운동 블로그 생성기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#F4F7F5; --surface:#fff; --ink:#16271F; --muted:#5C6E66; --line:#E2EAE5;
+    --primary:#2F6B5E; --primarySoft:#DCEAE4; --accent:#E07856; --accentDark:#C9603F;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard','Noto Sans KR',sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px 80px}
+  .brand{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .brand .ic{width:30px;height:30px;border-radius:9px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:800}
+  .brand span{font-size:13px;font-weight:600;color:var(--muted)}
+  h1.title{font-family:'Noto Serif KR',serif;font-size:30px;line-height:1.3;margin:0 0 10px;font-weight:700}
+  .sub{font-size:15px;line-height:1.7;color:var(--muted);margin:0 0 24px;max-width:560px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .label{font-size:12.5px;font-weight:700;margin:0 0 7px}
+  .hint{font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.6}
+  .field{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14.5px;color:var(--ink);background:#FCFDFC;font-family:inherit}
+  .field:focus{outline:2px solid var(--primary);outline-offset:1px}
+  textarea.field{resize:vertical;line-height:1.6}
+  .row{display:flex;gap:8px}
+  .mt{margin-top:20px}
+  .btn{border:none;border-radius:10px;cursor:pointer;font-weight:700;font-family:inherit}
+  .btn-primary{background:var(--primary);color:#fff;padding:0 16px;font-size:14px;display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .btn-accent{width:100%;background:var(--accent);color:#fff;padding:15px 18px;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px}
+  .btn-accent:disabled{background:var(--muted);cursor:default}
+  .btn-hero{width:100%;background:var(--accent);color:#fff;padding:20px;font-size:18px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:14px}
+  .btn-hero:disabled{background:var(--muted);cursor:default}
+  .btn-ghost{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px;max-height:220px;overflow-y:auto;padding:2px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--primarySoft);color:var(--primary);border-radius:999px;padding:6px 8px 6px 12px;font-size:13px;font-weight:600}
+  .chip button{border:none;background:transparent;color:var(--primary);cursor:pointer;opacity:.6;font-size:14px;line-height:1;padding:0}
+  select.field{cursor:pointer}
+  .opts{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .opt{flex:1 1 180px}
+  .err{margin-top:16px;background:#FBEDE8;border:1px solid #F0C9BC;color:var(--accentDark);border-radius:12px;padding:12px 14px;font-size:13.5px;white-space:pre-wrap}
+  .result{margin-top:22px}
+  .result .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .result .top .t{font-size:13px;font-weight:600;color:var(--muted)}
+  .post{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px 24px}
+  .post h1{font-family:'Noto Serif KR',serif;font-size:24px;line-height:1.35;margin:0 0 14px}
+  .post h2{font-family:'Noto Serif KR',serif;font-size:18px;margin:24px 0 8px;color:var(--primary)}
+  .post p{font-size:15px;line-height:1.85;margin:0 0 12px;color:#27352F}
+  .post ul{margin:0 0 12px;padding-left:18px}
+  .post li{font-size:15px;line-height:1.8;margin-bottom:4px}
+  .disc{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
+  details.box{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:16px;overflow:hidden}
+  details.box summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px}
+  details.box summary::-webkit-details-marker{display:none}
+  details.box summary .nm{color:var(--primary);font-weight:600;font-size:12.5px}
+  details.box .body{padding:0 20px 20px}
+  details.box label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px}
+  .saved{font-size:12px;color:var(--primary);margin-top:10px;display:none}
+  .todaypick{background:var(--primarySoft);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--ink);margin-bottom:4px}
+  .todaypick b{color:var(--primary)}
+  .todaymsg{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6}
+  .post h3{font-family:'Noto Serif KR',serif;font-size:16px;margin:18px 0 6px;color:var(--primary)}
+  .post ol{margin:0 0 12px;padding-left:22px}
+  .post ol li{font-size:15px;line-height:1.8;margin-bottom:5px}
+  .post hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+  .post .telwrap{margin-top:20px;padding:18px;border:2px dashed var(--accent);border-radius:14px;text-align:center;background:#FFF6F2}
+  .post .telwrap .cap{font-size:13.5px;color:var(--muted);font-weight:700;margin-bottom:6px}
+  .post .telwrap .tel{display:inline-block;font-size:32px;font-weight:800;color:var(--accentDark);letter-spacing:.5px}
+  .titlehint{font-size:11.5px;color:var(--accentDark);font-weight:600;margin:-6px 0 14px}
+  .copynote{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.7;background:#F1F5F3;border-radius:10px;padding:11px 13px}
+  .copynote b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="ic">↗</div><span>방문재활 · 재활운동 블로그 생성기</span></div>
+  <h1 class="title">버튼 하나면,<br/>오늘의 블로그 글이 됩니다.</h1>
+  <p class="sub">날짜에 맞춰 오늘의 주제를 자동으로 골라, 네이버 인기 검색어와 최신 소식을 반영한 블로그 초안을 한 번에 만들어 드려요.</p>
+
+  <!-- 센터 정보 -->
+  <details class="box" id="centerBox">
+    <summary>🏥 센터 정보 — 글에 자동으로 들어가요 <span class="nm" id="centerNm"></span></summary>
+    <div class="body">
+      <label>센터 이름</label><input id="cName" class="field" />
+      <label>지역 / 지점</label><textarea id="cArea" class="field" rows="2"></textarea>
+      <label>전화번호</label><input id="cPhone" class="field" />
+      <label>강점</label><textarea id="cStrength" class="field" rows="5"></textarea>
+      <label>한줄 소개 (철학)</label><input id="cSlogan" class="field" />
+      <button id="cSave" class="btn btn-primary" style="margin-top:14px;padding:10px 16px">저장</button>
+      <span class="saved" id="cSaved">저장됐어요 ✓ 이제 모든 글에 자동으로 들어갑니다.</span>
+    </div>
+  </details>
+
+  <!-- 오늘의 주제 목록 -->
+  <details class="box" id="topicsBox">
+    <summary>📅 오늘의 주제 목록 — 날짜별 자동 선택 <span class="nm" id="topicTodayNm"></span></summary>
+    <div class="body">
+      <label>주제 키워드 (한 줄에 하나씩, 순서대로 1일·2일·3일…)</label>
+      <textarea id="topicsText" class="field" rows="12"></textarea>
+      <button id="tSave" class="btn btn-primary" style="margin-top:14px;padding:10px 16px">저장</button>
+      <span class="saved" id="tSaved">저장됐어요 ✓</span>
+    </div>
+  </details>
+
+  <!-- 오늘의 글 추천 (원버튼) -->
+  <div class="card">
+    <div class="todaypick" id="todayPick"></div>
+    <div class="opts">
+      <div class="opt"><div class="label">말투</div>
+        <select id="tone" class="field"><option>따뜻하고 친근하게</option><option>전문적이고 신뢰감 있게</option><option>간결하고 실용적으로</option></select></div>
+      <div class="opt"><div class="label">분량</div>
+        <select id="length" class="field"><option>짧게 (핵심만)</option><option selected>보통</option><option>길게 (자세히)</option></select></div>
+    </div>
+    <button id="todayBtn" class="btn btn-hero">✨ 오늘의 글 추천받기</button>
+    <p class="todaymsg" id="todayMsg"></p>
+  </div>
+
+  <!-- 직접 주제 정하기 -->
+  <details class="box" style="margin-top:16px">
+    <summary>✏️ 또는 직접 주제 정하기</summary>
+    <div class="body">
+      <label>주제 (네이버에서 불러올 씨앗 키워드)</label>
+      <div class="row">
+        <input id="topic" class="field" style="flex:1 1 auto" value="파킨슨" placeholder="예: 파킨슨, 방문재활" />
+        <button id="loadBtn" class="btn btn-primary" style="flex:0 0 auto">검색어 불러오기</button>
+      </div>
+      <p class="hint" id="loadMsg" style="margin-top:8px"></p>
+      <label>인기순 검색어 <span id="kwCount">0</span>개</label>
+      <div class="row">
+        <input id="newKw" class="field" style="flex:1 1 auto" placeholder="검색어 직접 추가" />
+        <button id="addKwBtn" class="btn btn-primary" style="flex:0 0 auto">추가</button>
+      </div>
+      <div id="chips" class="chips"></div>
+      <button id="genBtn" class="btn btn-accent">✦ 이 검색어로 글 생성</button>
+    </div>
+  </details>
+
+  <div id="err" class="err" style="display:none"></div>
+
+  <div id="result" class="result" style="display:none">
+    <div class="top">
+      <span class="t">📄 생성된 초안</span>
+      <div style="display:flex;gap:8px">
+        <button id="copyBtn" class="btn-ghost">복사</button>
+      </div>
+    </div>
+    <div id="post" class="post"></div>
+    <div class="copynote">
+      <b>네이버에 올리는 법</b><br>
+      ① 위 <b>제목</b>은 네이버 글쓰기의 <b>제목칸</b>에 따로 넣기 &nbsp;② <b>복사</b> 버튼 → 본문칸에 <b>붙여넣기(Ctrl+V)</b><br>
+      ※ 이모지·기호·번호·구분선은 그대로 유지돼요. <b>글자 색·크기</b>는 네이버가 붙여넣기 때 지우니, 강조하고 싶은 줄만 네이버 도구로 한 번 더 색/크기 주면 끝!
+    </div>
+    <p class="disc">초안이에요. 사실관계·표현은 한 번 검토한 뒤 올려주세요. 증상·치료 관련 내용은 전문가 확인을 권합니다.</p>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let kws = [];
+let lastPost = "";
+
+// ── 센터 정보 ──
+const CENTER_DEFAULT = {
+  name: "한국방문재활운동센터",
+  area: "본사는 서울 개포동에 있으며, 역삼·잠실·수원동탄·방배·분당 등 여러 파트너 지점을 운영합니다.",
+  phone: "010-2606-1463",
+  strength: `1. 재활 경력 5년 이상의 전문 자격을 갖춘 물리치료사가 직접 댁으로 방문해, 환자분의 일상에 실질적인 변화를 만들어 드립니다. 첫 방문 평가와 상담은 무료이니, 너무 깊이 고민하지 마시고 편하게 한번 연락 주세요.
+2. 업계 최초로 물리치료학 이학박사인 김찬우 대표가 직접 운영하는 센터입니다. 단순히 더 많은 곳에 치료사를 보내 수익을 늘리려는 것이 아니라, 치료사들도 환자분의 변화를 함께 느끼고 배워 나가기를 바라는 대표님만의 따뜻한 철학이 담겨 있습니다.`,
+  slogan: "당신의 '뇌'를 이해하지 못하면, 당신의 '몸'도 변하지 않습니다.",
+};
+function loadCenter(){ try{ const s=localStorage.getItem("center"); return s?JSON.parse(s):CENTER_DEFAULT; }catch{ return CENTER_DEFAULT; } }
+function getCenter(){ return { name:$("cName").value.trim(), area:$("cArea").value.trim(), phone:$("cPhone").value.trim(), strength:$("cStrength").value.trim(), slogan:$("cSlogan").value.trim() }; }
+(function(){ const c=loadCenter(); $("cName").value=c.name||""; $("cArea").value=c.area||""; $("cPhone").value=c.phone||""; $("cStrength").value=c.strength||""; $("cSlogan").value=c.slogan||""; $("centerNm").textContent=c.name?`(${c.name})`:""; })();
+$("cSave").onclick=()=>{ const c=getCenter(); try{localStorage.setItem("center",JSON.stringify(c));}catch{} $("centerNm").textContent=c.name?`(${c.name})`:""; $("cSaved").style.display="block"; setTimeout(()=>$("cSaved").style.display="none",2500); };
+
+// ── 오늘의 주제 목록 ──
+const TOPICS_DEFAULT = ["뇌졸중","뇌경색","뇌출혈","편마비","파킨슨병","근감소증","근무력증","비사용증후군","퇴행성관절염","인공관절 수술 후 재활","고관절 골절","척수손상(SCI)","하반신마비","사지마비","다발성경화증(MS)","길랑바레증후군","치매","알츠하이머병","노인성 쇠약(Frailty)","낙상 후 보행장애","균형장애","보행장애","만성 요통","척추관협착증","허리디스크","경추디스크","척추압박골절","암 수술 후 재활","폐렴 후 체력저하","장기 입원 후 근력저하","중환자실 퇴원 후 기능저하(ICU-acquired weakness)"];
+function loadTopics(){ try{ const s=localStorage.getItem("topics"); if(s){ const a=JSON.parse(s); if(Array.isArray(a)&&a.length) return a; } }catch{} return TOPICS_DEFAULT; }
+function topicsToText(arr){ return arr.join("\n"); }
+function textToTopics(t){ return t.split("\n").map(s=>s.trim()).filter(Boolean); }
+function todayInfo(){
+  const list=loadTopics(); const now=new Date(); const day=now.getDate();
+  const idx=list.length?((day-1)%list.length):0;
+  return { list, day, idx, keyword:list[idx]||"", month:now.getMonth()+1, year:now.getFullYear() };
+}
+function refreshTodayUI(){
+  const t=todayInfo();
+  $("topicTodayNm").textContent = t.keyword?`(오늘 ${t.day}일 → ${t.keyword})`:"";
+  $("todayPick").innerHTML = t.keyword
+    ? `📅 오늘은 <b>${t.month}월 ${t.day}일</b> · 오늘의 주제: <b>${escapeHtml(t.keyword)}</b><br><span style="font-size:12px;color:var(--muted)">아래 버튼을 누르면 이 주제로 네이버 검색어와 최신 소식을 반영해 글을 만들어요.</span>`
+    : `주제 목록이 비어 있어요. 위 "오늘의 주제 목록"에서 추가해 주세요.`;
+}
+$("topicsText").value = topicsToText(loadTopics());
+refreshTodayUI();
+$("tSave").onclick=()=>{ const arr=textToTopics($("topicsText").value); try{localStorage.setItem("topics",JSON.stringify(arr));}catch{} refreshTodayUI(); $("tSaved").style.display="block"; setTimeout(()=>$("tSaved").style.display="none",2500); };
+
+// ── 키워드 칩 ──
+function renderChips(){
+  $("kwCount").textContent=kws.length; const c=$("chips"); c.innerHTML="";
+  kws.forEach((x)=>{ const el=document.createElement("span"); el.className="chip";
+    el.innerHTML=`${escapeHtml(x.keyword)}<button aria-label="삭제">✕</button>`;
+    el.querySelector("button").onclick=()=>{ kws=kws.filter(k=>k.keyword!==x.keyword); renderChips(); };
+    c.appendChild(el); });
+}
+function addKw(){ const k=$("newKw").value.trim(); if(!k) return; if(kws.some(x=>x.keyword===k)){$("newKw").value="";return;} kws.push({keyword:k}); $("newKw").value=""; renderChips(); }
+$("addKwBtn").onclick=addKw;
+$("newKw").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();addKw();} });
+
+async function fetchKeywords(seed){
+  const r=await fetch(`/api/keywords?keyword=${encodeURIComponent(seed)}`);
+  const data=await r.json(); if(!r.ok) throw new Error(data.error||"불러오기 실패");
+  return (data.keywords||[]).map(k=>({keyword:k.keyword}));
+}
+$("loadBtn").onclick=async()=>{
+  const seed=$("topic").value.trim()||"방문재활";
+  $("loadMsg").textContent="네이버에서 불러오는 중…"; $("loadBtn").disabled=true;
+  try{ kws=await fetchKeywords(seed); renderChips(); $("loadMsg").textContent=`인기순 검색어 ${kws.length}개를 불러왔어요.`; }
+  catch(e){ $("loadMsg").textContent="불러오기 실패: "+(e.message||e); }
+  finally{ $("loadBtn").disabled=false; }
+};
+
+// ── 생성 공통 ──
+async function generate({topic, fresh, date}){
+  $("err").style.display="none"; $("result").style.display="none";
+  try{
+    const r=await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({ topic, keywords:kws, tone:$("tone").value, length:$("length").value, center:getCenter(), fresh:!!fresh, date:date||"" })});
+    const data=await r.json(); if(!r.ok) throw new Error(data.detail||data.error||"생성 실패");
+    lastPost=data.post; $("post").innerHTML=mdToHtml(lastPost); $("result").style.display="block";
+    $("result").scrollIntoView({behavior:"smooth", block:"start"});
+  }catch(e){ showErr("실패: "+(e.message||e)); }
+}
+
+// ── 오늘의 글 추천 (원버튼) ──
+$("todayBtn").onclick=async()=>{
+  const t=todayInfo();
+  if(!t.keyword){ showErr("주제 목록이 비어 있어요. '오늘의 주제 목록'에서 추가해 주세요."); return; }
+  $("todayBtn").disabled=true; $("todayBtn").textContent="글을 만드는 중… (최신 소식 검색 포함, 20~40초)";
+  $("todayMsg").textContent=`오늘의 주제 "${t.keyword}"로 네이버 검색어를 불러오고 최신 소식을 반영하는 중이에요…`;
+  try{
+    try{ kws=await fetchKeywords(t.keyword); renderChips(); }catch{ kws=[{keyword:t.keyword}]; }
+    $("topic").value=t.keyword;
+    await generate({ topic:t.keyword, fresh:true, date:`${t.year}년 ${t.month}월 ${t.day}일` });
+    $("todayMsg").textContent="완성! 아래 글을 확인하고 복사해서 네이버 블로그에 붙여넣으세요.";
+  }finally{ $("todayBtn").disabled=false; $("todayBtn").textContent="✨ 오늘의 글 추천받기"; }
+};
+
+// ── 직접 생성 ──
+$("genBtn").onclick=async()=>{
+  if(kws.length===0){ showErr("검색어가 없어요. '검색어 불러오기'를 누르거나 직접 추가해 주세요."); return; }
+  $("genBtn").disabled=true; $("genBtn").textContent="글을 쓰는 중…";
+  try{ await generate({ topic:$("topic").value, fresh:false }); }
+  finally{ $("genBtn").disabled=false; $("genBtn").textContent="✦ 이 검색어로 글 생성"; }
+};
+
+$("copyBtn").onclick=async()=>{
+  if(!lastPost){ return; }
+  const html=buildClipboardHtml(lastPost); const text=toNaverText(lastPost);
+  const ok=()=>{ $("copyBtn").textContent="복사됨 ✓"; setTimeout(()=>$("copyBtn").textContent="복사",1600); };
+  try{
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([ new ClipboardItem({
+        "text/html": new Blob([html],{type:"text/html"}),
+        "text/plain": new Blob([text],{type:"text/plain"}),
+      })]);
+      ok();
+    } else { await navigator.clipboard.writeText(text); ok(); }
+  }catch(e){
+    try{ await navigator.clipboard.writeText(text); ok(); }
+    catch{ showErr("복사 실패: 브라우저 클립보드 권한을 확인해 주세요."); }
+  }
+};
+
+function showErr(m){ $("err").textContent=m; $("err").style.display="block"; }
+
+const TELRE=/\[\[TEL\]\]([^\[]+)\[\[\/TEL\]\]/;
+function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function inlineMd(s){ return s.replace(/\[\[\/?TEL\]\]/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
+
+// 네이버 붙여넣기용 깔끔한 텍스트 (이모지·기호·번호는 그대로 살아남음)
+function toNaverText(md){
+  let s = md.replace(new RegExp(TELRE.source,"g"), (m,p)=>{
+    const bar="━".repeat(18);
+    return `${bar}\n📞 상담 문의 · 첫 방문 평가/상담 무료\n☎ ${p.trim()}\n${bar}`;
+  });
+  return s.split("\n").map((line)=>{
+    let l=line;
+    l=l.replace(/^#{1,6}\s+/,"");
+    l=l.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1");
+    l=l.replace(/\*\*(.+?)\*\*/g,"$1");
+    l=l.replace(/^([\-\*])\s+/,"• ");
+    return l;
+  }).join("\n").replace(/\n{3,}/g,"\n\n").trim();
+}
+
+// 공통 라인 파서
+function eachBlock(md, on){
+  const lines=md.split("\n"); let listType=null;
+  const close=()=>{ if(listType){ on.closeList(listType); listType=null; } };
+  for(const raw of lines){
+    const line=raw.trim();
+    if(!line){ close(); continue; }
+    const tel=line.match(TELRE); if(tel){ close(); on.tel(tel[1].trim()); continue; }
+    if(/^[-─—]{3,}$/.test(line)){ close(); on.hr(); continue; }
+    if(line.startsWith("### ")){ close(); on.h(3,line.slice(4)); continue; }
+    if(line.startsWith("## ")){ close(); on.h(2,line.slice(3)); continue; }
+    if(line.startsWith("# ")){ close(); on.h(1,line.slice(2)); continue; }
+    const om=line.match(/^\d+\.\s+(.*)$/); if(om){ if(listType!=="ol"){ close(); on.openList("ol"); listType="ol"; } on.li(om[1]); continue; }
+    const um=line.match(/^([•▸✓\-\*])\s+(.*)$/); if(um){ if(listType!=="ul"){ close(); on.openList("ul"); listType="ul"; } on.li(um[2]); continue; }
+    close(); on.p(line);
+  }
+  close();
+}
+
+// 화면 미리보기용 HTML (전화번호 크게 박스)
+function mdToHtml(md){
+  let html="";
+  eachBlock(md,{
+    openList:(t)=>html+=(t==="ol"?"<ol>":"<ul>"),
+    closeList:(t)=>html+=(t==="ol"?"</ol>":"</ul>"),
+    li:(t)=>html+=`<li>${inlineMd(escapeHtml(t))}</li>`,
+    h:(lv,t)=>{ if(lv===1) html+=`<h1>${inlineMd(escapeHtml(t))}</h1><div class="titlehint">↑ 이 제목을 네이버 글 '제목칸'에 넣으세요</div>`; else html+=`<h${lv}>${inlineMd(escapeHtml(t))}</h${lv}>`; },
+    hr:()=>html+="<hr>",
+    tel:(p)=>html+=`<div class="telwrap"><div class="cap">📞 상담 문의 · 첫 방문 평가/상담 무료</div><span class="tel">☎ ${escapeHtml(p)}</span></div>`,
+    p:(t)=>html+=`<p>${inlineMd(escapeHtml(t))}</p>`,
+  });
+  return html;
+}
+
+// 클립보드용 HTML (네이버가 살려주는 굵게·제목·목록 유지)
+function buildClipboardHtml(md){
+  let html="";
+  eachBlock(md,{
+    openList:(t)=>html+=(t==="ol"?"<ol>":"<ul>"),
+    closeList:(t)=>html+=(t==="ol"?"</ol>":"</ul>"),
+    li:(t)=>html+=`<li>${inlineMd(escapeHtml(t))}</li>`,
+    h:(lv,t)=>html+=`<h${lv===1?2:lv}>${inlineMd(escapeHtml(t))}</h${lv===1?2:lv}>`,
+    hr:()=>html+="<hr>",
+    tel:(p)=>html+=`<p><strong>📞 상담 문의 · 첫 방문 평가/상담 무료</strong></p><p><strong>☎ ${escapeHtml(p)}</strong></p>`,
+    p:(t)=>html+=`<p>${inlineMd(escapeHtml(t))}</p>`,
+  });
+  return `<div>${html}</div>`;
+}
+renderChips();
+</script>
+</body>
+</html>
