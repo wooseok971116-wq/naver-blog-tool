@@ -33,6 +33,7 @@ module.exports = async function handler(req, res) {
     const length = (body.length || "보통").toString();
     const c = body.center || {};
     const fresh = !!body.fresh;
+    const ref = !!body.ref;
     const dateStr = (body.date || "").toString();
     const lenHint = length.includes("짧") ? "900자 내외" : length.includes("길") ? "1800자 이상" : "1200~1500자";
 
@@ -46,10 +47,12 @@ module.exports = async function handler(req, res) {
 [센터 정보 없음 — 특정 센터 홍보 없이 정보 글만]`;
 
     const telLine = (c.phone && c.phone.trim())
-      ? `글의 맨 마지막을, 다른 머리말 없이 정확히 아래 형식으로 끝낼 것 (대괄호 토큰을 그대로 포함, 안의 두 줄만 출력):
+      ? `글의 맨 마지막을, 다른 머리말 없이 정확히 아래 형식으로 끝낼 것 (대괄호 토큰을 그대로 포함, 안의 내용만 출력):
 [[CTA]]
 첫 방문 평가 및 상담 무료
-☎ ${c.phone}
+☎ ${c.phone}${(c.link && c.link.trim()) ? `
+한국방문재활운동센터 안내 링크
+${c.link.trim()}` : ""}
 [[/CTA]]`
       : `전화번호가 없으므로 마지막 연락처(CTA) 줄은 넣지 말 것.`;
 
@@ -57,6 +60,13 @@ module.exports = async function handler(req, res) {
 [시의성 — 매달 갱신되는 글]
 - 이 글은 같은 주제로 매달 다시 작성될 수 있어. 오늘 날짜(${dateStr || "현재"}) 기준으로 '${topic}' 관련 최근 뉴스·정책·연구 동향을 웹에서 찾아 한두 가지 자연스럽게 본문에 녹여, 지난달과 다른 글로 써줘.
 - 웹 검색으로 확인된 사실만, 날짜·수치·출처를 지어내지 말 것. 뉴스는 짧게 요약만(원문 길게 베끼지 말 것).` : "";
+
+    const refBlock = ref ? `
+[상위 노출 글 참고 — 베끼기 절대 금지]
+- '${topic}'(으)로 네이버/웹에 검색했을 때 상위에 노출되는 블로그 글들을 웹 검색으로 찾아, 어떤 소제목 구성·형식으로, 어떤 하위 주제들을 다뤄 검색을 잡고 있는지 먼저 파악할 것.
+- 그 구성과 다루는 주제를 '참고'만 하고, 문장·표현·문단을 절대 그대로 가져오지 말 것. 반드시 더 깊고 정확하며 읽기 쉬운 '완전히 새로 쓴 글'로 업그레이드할 것. (네이버 유사문서로 판정되면 안 됨)
+- 상위 글들이 공통으로 다루는 핵심은 빠짐없이 담되, 그들이 놓친 디테일·실용 팁·최신 정보를 더해 차별화할 것.
+- 맞춤법·띄어쓰기·문맥을 정확하고 자연스럽게 다듬을 것.` : "";
 
     const promptText = `너는 네이버 블로그 상위노출과 블로그 지수에 정통한 방문재활·재활운동 분야 전문 작가야.
 아래는 네이버에서 사람들이 실제로 많이 검색한 검색어(질문·문장형 포함)야. 이 궁금증이 풀리는, 네이버 블로그에 바로 올릴 한국어 글을 써줘.
@@ -68,6 +78,7 @@ ${topic}
 ${keywords.map((k, i) => `${i + 1}. ${k.keyword || k}`).join("\n")}
 ${centerBlock}
 ${freshBlock}
+${refBlock}
 
 [제목 규칙]
 - 제목(맨 앞 # 한 줄)은 항상 70~80자로 길고 구체적으로. 핵심 키워드 1~2개를 앞쪽에 자연스럽게 포함하고, 클릭하고 싶게 궁금증·혜택을 담을 것.
@@ -90,8 +101,8 @@ ${freshBlock}
 - ${telLine}`;
 
     let post;
-    if (fresh) {
-      const tools = [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }];
+    if (fresh || ref) {
+      const tools = [{ type: "web_search_20250305", name: "web_search", max_uses: ref ? 5 : 3 }];
       try { post = await callAnthropic([{ role: "user", content: promptText }], 4000, tools); }
       catch (e) { post = await callAnthropic([{ role: "user", content: promptText }], 3000, null); }
     } else {
