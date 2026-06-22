@@ -208,7 +208,7 @@ async function generate({topic, fresh, ref, date}){
     const r=await fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({ topic, keywords:kws, tone:$("tone").value, length:$("length").value, center:getCenter(), fresh:!!fresh, ref:!!ref, date:date||"" })});
     const data=await r.json(); if(!r.ok) throw new Error(data.detail||data.error||"생성 실패");
-    lastPost=data.post; $("post").innerHTML=mdToHtml(lastPost); $("result").style.display="block";
+    lastPost=sanitizePost(data.post); $("post").innerHTML=mdToHtml(lastPost); $("result").style.display="block";
     $("result").scrollIntoView({behavior:"smooth", block:"start"});
   }catch(e){ showErr("실패: "+(e.message||e)); }
 }
@@ -256,6 +256,15 @@ $("copyBtn").onclick=async()=>{
 };
 
 function showErr(m){ $("err").textContent=m; $("err").style.display="block"; }
+
+// 맨 앞 안내 문구("아래는 ~ 글입니다" 등) 자동 제거
+function sanitizePost(md){
+  let s=(md||"").trim();
+  const idx=s.search(/^#\s/m);
+  if(idx>0) s=s.slice(idx);
+  s=s.replace(/^\s*(아래는|다음은|위 |참고)[^\n]*\n+/,"");
+  return s.trim();
+}
 
 const CTARE=/\[\[CTA\]\]([\s\S]*?)\[\[\/CTA\]\]/;
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
