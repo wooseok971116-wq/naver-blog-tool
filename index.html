@@ -229,10 +229,12 @@ $("todayBtn").onclick=async()=>{
 
 // ── 직접 생성 (상위 노출 글 참고) ──
 $("genBtn").onclick=async()=>{
-  if(kws.length===0){ showErr("검색어가 없어요. '검색어 불러오기'를 누르거나 직접 추가해 주세요."); return; }
+  const topic=$("topic").value.trim();
+  if(!topic){ showErr("주제 키워드를 입력해 주세요. (예: 파킨슨)"); return; }
+  kws=[];
   $("genBtn").disabled=true; $("genBtn").textContent="상위 글 참고해서 쓰는 중… (20~40초)";
-  try{ await generate({ topic:$("topic").value, ref:true }); }
-  finally{ $("genBtn").disabled=false; $("genBtn").textContent="✦ 이 검색어로 글 생성"; }
+  try{ await generate({ topic, ref:true }); }
+  finally{ $("genBtn").disabled=false; $("genBtn").textContent="✦ 이 키워드로 블로그 작성"; }
 };
 
 $("copyBtn").onclick=async()=>{
