@@ -68,15 +68,17 @@ ${c.link.trim()}` : ""}
 - 상위 글들이 공통으로 다루는 핵심은 빠짐없이 담되, 그들이 놓친 디테일·실용 팁·최신 정보를 더해 차별화할 것.
 - 맞춤법·띄어쓰기·문맥을 정확하고 자연스럽게 다듬을 것.` : "";
 
+    const keywordsBlock = keywords.length ? `
+[참고용 인기 검색어 (인기순)]
+${keywords.map((k, i) => `${i + 1}. ${k.keyword || k}`).join("\n")}
+` : "";
+
     const promptText = `너는 네이버 블로그 상위노출과 블로그 지수에 정통한 방문재활·재활운동 분야 전문 작가야.
-아래는 네이버에서 사람들이 실제로 많이 검색한 검색어(질문·문장형 포함)야. 이 궁금증이 풀리는, 네이버 블로그에 바로 올릴 한국어 글을 써줘.
+'${topic}' 주제로, 네이버 블로그에 바로 올릴 한국어 글을 써줘.
 
 [주제]
 ${topic}
-
-[실제 인기 검색어 (인기순)]
-${keywords.map((k, i) => `${i + 1}. ${k.keyword || k}`).join("\n")}
-${centerBlock}
+${keywordsBlock}${centerBlock}
 ${freshBlock}
 ${refBlock}
 
