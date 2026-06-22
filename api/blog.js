@@ -34,6 +34,7 @@ module.exports = async function handler(req, res) {
     const c = body.center || {};
     const fresh = !!body.fresh;
     const ref = !!body.ref;
+    const avoid = Array.isArray(body.avoid) ? body.avoid.filter(x => typeof x === "string" && x.trim()).slice(0, 80) : [];
     const dateStr = (body.date || "").toString();
     const lenHint = length.includes("짧") ? "900자 내외" : length.includes("길") ? "1800자 이상" : "1200~1500자";
 
@@ -68,6 +69,16 @@ ${c.link.trim()}` : ""}
 - 상위 글들이 공통으로 다루는 핵심은 빠짐없이 담되, 그들이 놓친 디테일·실용 팁·최신 정보를 더해 차별화할 것.
 - 맞춤법·띄어쓰기·문맥을 정확하고 자연스럽게 다듬을 것.` : "";
 
+    const avoidBlock = avoid.length ? `
+[중복 금지 — 매우 중요]
+- 아래는 '${topic}' 주제로 '이전에 이미 발행한' 글들의 제목과 소제목 목록이야. 네이버 유사문서로 걸리면 블로그 지수가 떨어지므로, 이번 글은 아래 것들과 절대 비슷하면 안 돼.
+- 아래에 있는 제목·소제목과 같거나 비슷한 문구를 절대 다시 쓰지 말 것. 단어 몇 개만 바꾼 수준도 금지.
+- 제목·소제목·글의 도입 방식·전체 구성·예시·표현을 매번 '새로운 각도'로 완전히 다르게 쓸 것. (예: 이번엔 증상 중심이었다면 다음엔 보호자 입장, 일상 관리, 오해와 진실, 사례 중심 등 접근 자체를 바꿀 것)
+- 같은 주제라도 읽는 사람이 "어제 글이랑 완전히 다른 새 글이네" 라고 느끼게 만들 것.
+
+[이미 사용한 제목·소제목 — 재사용 금지]
+${avoid.map((a, i) => `${i + 1}. ${a}`).join("\n")}` : "";
+
     const keywordsBlock = keywords.length ? `
 [참고용 인기 검색어 (인기순)]
 ${keywords.map((k, i) => `${i + 1}. ${k.keyword || k}`).join("\n")}
@@ -81,6 +92,7 @@ ${topic}
 ${keywordsBlock}${centerBlock}
 ${freshBlock}
 ${refBlock}
+${avoidBlock}
 
 [제목 규칙]
 - 제목(맨 앞 # 한 줄)은 항상 70~80자로 길고 구체적으로. 핵심 키워드 1~2개를 앞쪽에 자연스럽게 포함하고, 클릭하고 싶게 궁금증·혜택을 담을 것.
