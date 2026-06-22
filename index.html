@@ -159,6 +159,7 @@ let kws = [];
 let lastPost = "";
 
 // ── 센터 정보 ──
+const CENTER_VERSION = 2; // 이 숫자를 올리면, 모든 브라우저가 다음 접속 때 최신 기본정보로 자동 갱신됨
 const CENTER_DEFAULT = {
   name: "한국방문재활운동센터",
   area: "본사는 서울 개포동에 있으며, 역삼·잠실·수원동탄·방배·분당·용산 등 여러 파트너 지점을 운영 중에 있습니다.",
@@ -167,14 +168,24 @@ const CENTER_DEFAULT = {
 2. (!업계 최초!) 물리치료학 이학박사인 김찬우 박사가 직접 운영하는 센터입니다.
 3. 첫 방문 평가 및 상담은 무료입니다. 마음 편하게 연락주세요.
 4. 무작정 걷는다고 좋아지지 않습니다. 제대로 걸어야 할 것입니다.
-5. 저희 센터의 이익보다는 환자 및 보호자의 입장에서 먼저 생각하겠습니다.`,
+5. 저희 센터의 이익보다는 환자 및 보호자의 입장에서 먼저 생각하겠습니다.
+6. 이용 비용 (비급여): 60분 10만원 / 30분 7만원. 파트너점 대표가 직접 방문 시 60분 12만원 / 30분 8만원. 방문재활 바우처·건강보험은 적용되지 않습니다.`,
   slogan: "당신의 '뇌'를 이해하지 못한다면, 당신의 '몸'은 변하지 않습니다.",
   link: "https://scintillating-cajeta-c28696.netlify.app",
 };
-function loadCenter(){ try{ const s=localStorage.getItem("center"); return s?JSON.parse(s):CENTER_DEFAULT; }catch{ return CENTER_DEFAULT; } }
+function loadCenter(){
+  try{
+    const v=parseInt(localStorage.getItem("center_v")||"0",10);
+    const s=localStorage.getItem("center");
+    if(s && v>=CENTER_VERSION){ return JSON.parse(s); }
+    // 저장본이 없거나(처음), 버전이 낮으면(옛날에 연 적 있는 사람) → 최신 기본정보로 한 번 맞춤
+    try{ localStorage.setItem("center", JSON.stringify(CENTER_DEFAULT)); localStorage.setItem("center_v", String(CENTER_VERSION)); }catch{}
+    return CENTER_DEFAULT;
+  }catch{ return CENTER_DEFAULT; }
+}
 function getCenter(){ return { name:$("cName").value.trim(), area:$("cArea").value.trim(), phone:$("cPhone").value.trim(), strength:$("cStrength").value.trim(), slogan:$("cSlogan").value.trim(), link:$("cLink").value.trim() }; }
 (function(){ const c=loadCenter(); $("cName").value=c.name||""; $("cArea").value=c.area||""; $("cPhone").value=c.phone||""; $("cStrength").value=c.strength||""; $("cSlogan").value=c.slogan||""; $("cLink").value=c.link||""; $("centerNm").textContent=c.name?`(${c.name})`:""; })();
-$("cSave").onclick=()=>{ const c=getCenter(); try{localStorage.setItem("center",JSON.stringify(c));}catch{} $("centerNm").textContent=c.name?`(${c.name})`:""; $("cSaved").style.display="block"; setTimeout(()=>$("cSaved").style.display="none",2500); };
+$("cSave").onclick=()=>{ const c=getCenter(); try{localStorage.setItem("center",JSON.stringify(c));localStorage.setItem("center_v",String(CENTER_VERSION));}catch{} $("centerNm").textContent=c.name?`(${c.name})`:""; $("cSaved").style.display="block"; setTimeout(()=>$("cSaved").style.display="none",2500); };
 
 // ── 오늘의 주제 목록 ──
 const TOPICS_DEFAULT = ["뇌졸중","뇌경색","뇌출혈","편마비","파킨슨병","근감소증","근무력증","비사용증후군","퇴행성관절염","인공관절 수술 후 재활","고관절 골절","척수손상(SCI)","하반신마비","사지마비","다발성경화증(MS)","길랑바레증후군","치매","알츠하이머병","노인성 쇠약(Frailty)","낙상 후 보행장애","균형장애","보행장애","만성 요통","척추관협착증","허리디스크","경추디스크","척추압박골절","암 수술 후 재활","폐렴 후 체력저하","장기 입원 후 근력저하","중환자실 퇴원 후 기능저하(ICU-acquired weakness)"];
