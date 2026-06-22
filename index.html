@@ -127,19 +127,10 @@
   <details class="box" style="margin-top:16px">
     <summary>✏️ 또는 직접 주제 정하기</summary>
     <div class="body">
-      <label>주제 (네이버에서 불러올 씨앗 키워드)</label>
-      <div class="row">
-        <input id="topic" class="field" style="flex:1 1 auto" value="파킨슨" placeholder="예: 파킨슨, 방문재활" />
-        <button id="loadBtn" class="btn btn-primary" style="flex:0 0 auto">검색어 불러오기</button>
-      </div>
-      <p class="hint" id="loadMsg" style="margin-top:8px"></p>
-      <label>인기순 검색어 <span id="kwCount">0</span>개</label>
-      <div class="row">
-        <input id="newKw" class="field" style="flex:1 1 auto" placeholder="검색어 직접 추가" />
-        <button id="addKwBtn" class="btn btn-primary" style="flex:0 0 auto">추가</button>
-      </div>
-      <div id="chips" class="chips"></div>
-      <button id="genBtn" class="btn btn-accent">✦ 이 검색어로 글 생성</button>
+      <p class="hint" style="margin-bottom:14px">직접 주제 정하기로 블로그를 작성하시면, 그 키워드를 네이버에 검색했을 때 상위노출되는 블로그를 기반으로 더 업그레이드된 블로그를 작성해드립니다.</p>
+      <label>주제 키워드</label>
+      <input id="topic" class="field" value="파킨슨" placeholder="예: 파킨슨, 방문재활" />
+      <button id="genBtn" class="btn btn-accent">✦ 이 키워드로 블로그 작성</button>
     </div>
   </details>
 
@@ -203,30 +194,12 @@ $("topicsText").value = topicsToText(loadTopics());
 refreshTodayUI();
 $("tSave").onclick=()=>{ const arr=textToTopics($("topicsText").value); try{localStorage.setItem("topics",JSON.stringify(arr));}catch{} refreshTodayUI(); $("tSaved").style.display="block"; setTimeout(()=>$("tSaved").style.display="none",2500); };
 
-// ── 키워드 칩 ──
-function renderChips(){
-  $("kwCount").textContent=kws.length; const c=$("chips"); c.innerHTML="";
-  kws.forEach((x)=>{ const el=document.createElement("span"); el.className="chip";
-    el.innerHTML=`${escapeHtml(x.keyword)}<button aria-label="삭제">✕</button>`;
-    el.querySelector("button").onclick=()=>{ kws=kws.filter(k=>k.keyword!==x.keyword); renderChips(); };
-    c.appendChild(el); });
-}
-function addKw(){ const k=$("newKw").value.trim(); if(!k) return; if(kws.some(x=>x.keyword===k)){$("newKw").value="";return;} kws.push({keyword:k}); $("newKw").value=""; renderChips(); }
-$("addKwBtn").onclick=addKw;
-$("newKw").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();addKw();} });
-
+// ── 키워드 (오늘의 글 추천에서 내부적으로만 사용) ──
 async function fetchKeywords(seed){
   const r=await fetch(`/api/keywords?keyword=${encodeURIComponent(seed)}`);
   const data=await r.json(); if(!r.ok) throw new Error(data.error||"불러오기 실패");
   return (data.keywords||[]).map(k=>({keyword:k.keyword}));
 }
-$("loadBtn").onclick=async()=>{
-  const seed=$("topic").value.trim()||"방문재활";
-  $("loadMsg").textContent="네이버에서 불러오는 중…"; $("loadBtn").disabled=true;
-  try{ kws=await fetchKeywords(seed); renderChips(); $("loadMsg").textContent=`인기순 검색어 ${kws.length}개를 불러왔어요.`; }
-  catch(e){ $("loadMsg").textContent="불러오기 실패: "+(e.message||e); }
-  finally{ $("loadBtn").disabled=false; }
-};
 
 // ── 생성 공통 ──
 async function generate({topic, fresh, ref, date}){
@@ -247,7 +220,7 @@ $("todayBtn").onclick=async()=>{
   $("todayBtn").disabled=true; $("todayBtn").textContent="글을 만드는 중… (최신 소식 검색 포함, 20~40초)";
   $("todayMsg").textContent=`오늘의 주제 "${t.keyword}"로 네이버 검색어를 불러오고 최신 소식을 반영하는 중이에요…`;
   try{
-    try{ kws=await fetchKeywords(t.keyword); renderChips(); }catch{ kws=[{keyword:t.keyword}]; }
+    try{ kws=await fetchKeywords(t.keyword); }catch{ kws=[{keyword:t.keyword}]; }
     $("topic").value=t.keyword;
     await generate({ topic:t.keyword, fresh:true, date:`${t.year}년 ${t.month}월 ${t.day}일` });
     $("todayMsg").textContent="완성! 아래 글을 확인하고 복사해서 네이버 블로그에 붙여넣으세요.";
@@ -383,7 +356,6 @@ function toNaverText(md){
   }
   return s.replace(/^\n+|\n+$/g,"");
 }
-renderChips();
 </script>
 </body>
 </html>
