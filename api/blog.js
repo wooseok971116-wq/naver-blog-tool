@@ -4,6 +4,39 @@
 
 const MODEL = "claude-sonnet-4-6";
 
+// 제목(맨 앞 # 줄)이 limit자를 넘으면 구분선(— · |)에서, 없으면 단어 경계에서 깔끔히 자른다.
+function capTitle(post, limit) {
+  const lines = String(post).split("\n");
+  let idx = lines.findIndex(l => /^#\s+/.test(l.trim()));
+  if (idx < 0) return post;
+  let raw = lines[idx].replace(/^#\s+/, "").trim();
+  if ([...raw].length <= limit) return post;
+  // 1) 구분선 기준으로 자르되, 남는 길이가 너무 짧지 않게
+  let cut = raw;
+  const seps = [" — ", " – ", " · ", " | ", " - "];
+  for (const s of seps) {
+    const p = raw.split(s);
+    if (p.length > 1) {
+      let acc = p[0];
+      for (let i = 1; i < p.length; i++) {
+        const next = acc + s + p[i];
+        if ([...next].length <= limit) acc = next; else break;
+      }
+      if ([...acc].length >= 20) { cut = acc; break; }
+    }
+  }
+  // 2) 그래도 길면 한도 내에서 마지막 공백까지 자르고 말줄임 없이 정리
+  if ([...cut].length > limit) {
+    let arr = [...raw].slice(0, limit);
+    let str = arr.join("");
+    const sp = str.lastIndexOf(" ");
+    if (sp > limit * 0.6) str = str.slice(0, sp);
+    cut = str.replace(/[\s\-–—·|,]+$/, "").trim();
+  }
+  lines[idx] = "# " + cut;
+  return lines.join("\n");
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST만 허용됩니다." });
   const KEY = process.env.ANTHROPIC_API_KEY;
@@ -100,11 +133,12 @@ ${refBlock}
 ${avoidBlock}
 
 [제목 규칙]
-- 제목(맨 앞 # 한 줄)은 항상 70~80자로 길고 구체적으로. 핵심 키워드 1~2개를 앞쪽에 자연스럽게 포함하고, 클릭하고 싶게 궁금증·혜택을 담을 것.
-- 글자 수를 채우려고 "2026년 O월까지", "총정리", "최신판" 같은 날짜·시점 문구를 제목에 넣지 말 것. 대신 주제와 관련된 증상·원인·방법·대상 등 실질적인 말을 덧붙여 길이를 맞출 것.
-- 제목 '맨 뒤'에, '${topic}' 주제로 보호자·가족이 실제로 네이버에 검색할 법한 '걱정/증상 표현(롱테일 검색어)'을 정확히 2개 자연스럽게 덧붙일 것. 구분선( — 또는 · )으로 살짝 띄워 깔끔하게.
-  · 예시 느낌(이건 예시일 뿐, 반드시 '${topic}'에 맞는 표현을 새로 만들 것): "갑자기 걸음이 느려짐", "자꾸 누워만 계심", "구부정하게 걸음", "갑자기 못 걷는 이유", "수술부위가 붓고 아픔", "인공관절 수술 후 다리 붓기"
-  · 반드시 '${topic}'과 의미가 맞는 표현만 쓸 것(엉뚱한 질환 증상 금지). 낚시·과장·공포 조장이 아니라, 실제 보호자가 검색하는 현실적인 표현으로. 2개만(많이 넣지 말 것).
+- 제목은 맨 앞 # 한 줄. '뒤에 붙이는 걱정/증상 표현까지 포함한 제목 전체 길이'가 공백 포함 60~90자가 되게 하고, 어떤 경우에도 100자를 절대 넘기지 말 것. (네이버 블로그 제목은 100자가 넘으면 잘림)
+- 핵심 키워드 1~2개를 앞쪽에 자연스럽게 포함하고, 클릭하고 싶게 궁금증·혜택을 담을 것.
+- 글자 수를 채우려고 "2026년 O월까지", "총정리", "최신판" 같은 날짜·시점 문구를 제목에 넣지 말 것.
+- 제목 '맨 뒤'에, '${topic}' 주제로 보호자·가족이 실제로 네이버에 검색할 법한 '걱정/증상 표현(롱테일 검색어)'을 2개 자연스럽게 덧붙일 것. 구분선( — 또는 · )으로 살짝 띄워 깔끔하게. 단, 2개를 붙였을 때 제목 전체가 90자를 넘으면 1개만 붙이고, 그래도 길면 앞쪽 본제목을 줄여서 전체를 90자 이하로 맞출 것.
+  · 예시 느낌(이건 예시일 뿐, 반드시 '${topic}'에 맞는 표현을 새로 만들 것): "갑자기 걸음이 느려짐", "자꾸 누워만 계심", "구부정하게 걸음", "갑자기 못 걷는 이유", "수술부위가 붓고 아픔"
+  · 반드시 '${topic}'과 의미가 맞는 표현만 쓸 것(엉뚱한 질환 증상 금지). 낚시·과장·공포 조장이 아니라, 실제 보호자가 검색하는 현실적인 표현으로. 짧게.
 
 [본문 구성 — 네이버 지수에 강하게]
 - 도입 2~3문장(공감) → 본문 소제목(##) 3~4개 → 마무리. 분량 ${lenHint}.
@@ -131,6 +165,8 @@ ${avoidBlock}
     } else {
       post = await callAnthropic([{ role: "user", content: promptText }], 3000, null);
     }
+    // 안전장치: 제목(맨 앞 # 줄)이 100자를 넘으면 깔끔하게 줄여 네이버 제목 잘림 방지
+    post = capTitle(post, 100);
     return res.status(200).json({ post });
   } catch (e) {
     return res.status(500).json({ error: "생성 중 오류가 발생했습니다.", detail: String(e.message || e) });
